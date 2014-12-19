@@ -39,6 +39,9 @@ from kamaki.clients import astakos
 from kamaki.clients import ClientError
 from kamaki.cli import config as kamaki_config
 from kamaki.clients.cyclades import CycladesNetworkClient
+from kamaki.cli import logger
+
+LOG = logger.add_file_logger(__name__, filename='/home/user/log.log')
 
 from occi.core_model import Mixin, Resource
 from occi.backend import MixinBackend
@@ -344,6 +347,7 @@ def application(env, start_response):
     t =snf_voms.VomsAuthN()       
     (user_dn, user_vo, user_fqans) = t.process_request(env)
     print (user_dn, user_vo, user_fqans)
+    LOG.debug(user_dn, user_vo, user_fqans)
       
     env['HTTP_AUTH_TOKEN'] = get_user_token(user_dn)
    
