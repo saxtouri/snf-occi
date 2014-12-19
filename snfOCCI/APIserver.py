@@ -65,6 +65,7 @@ class MyAPP(wsgi.Application):
         """
         Initialization of the WSGI OCCI application for synnefo
         """
+        LOG.info('DO IT')
         global ENABLE_VOMS, VOMS_DB
         ENABLE_VOMS = VOMS_CONFIG['enable_voms']
         super(MyAPP,self).__init__(registry=snfRegistry())
@@ -376,6 +377,7 @@ def application(env, start_response):
 def app_factory(global_config, **local_config):
     """This function wraps our simple WSGI app so it
     can be used with paste.deploy"""
+    LOG.info('THIS IS ALSO NICE')
     return application
 
 def tenant_application(env, start_response):
