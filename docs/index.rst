@@ -13,7 +13,7 @@ snf-occi's documentation!
 .. toctree::
    :maxdepth: 2
 
-About OCCI
+About Open Cloud Computing Interface (OCCI)
 ----------
 The current OCCI specification consists of the following three documents:
 
