@@ -1,6 +1,6 @@
 from kamaki.clients.compute import ComputeClient
 from kamaki.clients.cyclades import CycladesClient
-from kamaki.config  import Config
+from kamaki.cli.config  import Config
 
 from occi import registry
 from occi.core_model import Mixin
@@ -15,3 +15,6 @@ class snfRegistry(registry.NonePersistentRegistry):
         resource.identifier = key
 
         super(snfRegistry, self).add_resource(key, resource, extras)
+
+    def set_hostname(self, hostname):
+	super(snfRegistry, self).set_hostname("https://okeanos-occi2.hellasgrid.gr:9000")
