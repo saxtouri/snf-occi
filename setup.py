@@ -6,7 +6,8 @@ setup(
     description='OCCI to Openstack/Cyclades API bridge',
     url='http://code.grnet.gr/projects/snf-occi',
     license='BSD',
-    packages = ['snfOCCI','snfOCCI.snf_voms','snfOCCI.httpd','snfOCCI.snfServer','snfOCCI.extensions', 'astavomaki'],
+    packages = [
+        'snfOCCI', 'snfOCCI.snf_voms', 'snfOCCI.extensions', 'astavomaki'],
     entry_points = ''' 
         [paste.app_factory]
         snf_occi_app = snfOCCI:main
