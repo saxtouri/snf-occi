@@ -2,7 +2,7 @@ SERVER_CONFIG = {
     'port': 9000,
     'hostname': 'snf-136122.vm.okeanos.grnet.gr',
     'compute_arch': 'x86'
-    }
+}
 
 KAMAKI_CONFIG = {
     'compute_url': 'https://cyclades.okeanos.grnet.gr/compute/v2.0/',
@@ -17,8 +17,7 @@ VOMS_CONFIG = {
     'ca_path': '/etc/grid-security/certificates/',
     'cert_dir' : '/etc/ssl/certs/',
     'key_dir' : '/etc/ssl/private/',
-    'token' : '2iar6Uk36gBjFkdn0HfsxWZBB3TKQjoklYtZO9TRed0'
+    'token' : 'rCfDs3MHoh_h6ZgA7KofBfxWGOeSuXeVVJ4US21I9FM'
 }
 
 ASTAVOMS_URL = 'https://okeanos-astavoms.hellasgrid.gr'
-

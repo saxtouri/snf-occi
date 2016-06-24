@@ -224,7 +224,7 @@ class VomsAuthN():
                 details='The request body is empty, while it should contain the authentication method')
             
         request_body = environ['wsgi.input'].read(request_body_size)
-
+        
         # print request_body
         request_body = request_body.replace("true","\"true\"")
         request_body = request_body.replace('"','\'' )  
