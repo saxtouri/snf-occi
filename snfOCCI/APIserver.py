@@ -18,7 +18,7 @@ from snfOCCI.network import NetworkBackend, IpNetworkBackend, IpNetworkInterface
 from kamaki.clients.cyclades import CycladesNetworkClient
 from snfOCCI.extensions import snf_addons
 
-ASTAVOMS_IS_KEYSTONE = False
+ASTAVOMS_IS_KEYSTONE = True
 
 # from kamaki.clients.compute import ComputeClient
 from kamaki.clients.cyclades import CycladesComputeClient as ComputeClient

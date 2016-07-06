@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-'''
-Created on Sep 9, 2013
-
-@author: nassia
-'''
-
-from snfOCCI.config import SERVER_CONFIG
-=======
 # Copyright (C) 2012-2015 GRNET S.A.
 #
 # This program is free software: you can redistribute it and/or modify
