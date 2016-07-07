@@ -57,7 +57,7 @@ class MyAPP(wsgi.Application):
         VALIDATOR_APP = validator(self)
 
     def _register_backends(self):
-        print "Inside Register Backends"
+        print "Register Backends"
         COMPUTE_BACKEND = ComputeBackend()
         NETWORK_BACKEND = NetworkBackend()
         NETWORKINTERFACE_BACKEND = NetworkInterfaceBackend()
@@ -81,6 +81,7 @@ class MyAPP(wsgi.Application):
         self.register_backend(snf_addons.SNF_KEY_PAIR_EXT,  SNFBackend())
 
     def refresh_images(self, snf, client):
+        print "Refresh images"
         try:
             images = snf.list_images()
             for image in images:
@@ -95,26 +96,8 @@ class MyAPP(wsgi.Application):
             raise HTTPError(404, "Unauthorized access")
 
     def refresh_flavors(self, snf, client):
-        flavors = snf.list_flavors()
-        print "Retrieving details for each flavor"
-        for flavor in flavors:
-            details = snf.get_flavor_details(flavor['id'])
-            FLAVOR_ATTRIBUTES = {
-                'occi.core.id': flavor['id'],
-                'occi.compute.cores': str(details['vcpus']),
-                'occi.compute.memory': str(details['ram']),
-                'occi.storage.size': str(details['disk']),
-            }
-            FLAVOR = Mixin(
-                "http://schemas.ogf.org/occi/infrastructure#",
-                str(flavor['name']),
-                [RESOURCE_TEMPLATE],
-                attributes=FLAVOR_ATTRIBUTES)
-            self.register_backend(FLAVOR, MixinBackend())
-
-    def refresh_flavors_norecursive(self, snf, client):
-        flavors = snf.list_flavors(True)
-        print "@ Retrieving details for each flavor"
+        print "Refresh flavors"
+        flavors = snf.list_flavors(detail=True)
         for flavor in flavors:
             FLAVOR_ATTRIBUTES = {
                 'occi.core.id': flavor['id'],
@@ -130,8 +113,8 @@ class MyAPP(wsgi.Application):
             self.register_backend(FLAVOR, MixinBackend())
 
     def refresh_network_instances(self, client):
-        print "@ refresh NETWORKS"
-        network_details = client.list_networks(detail='True')
+        print "Refresh Networks"
+        network_details = client.list_networks(detail=True)
         resources = self.registry.resources
         occi_keys = resources.keys()
 
@@ -145,15 +128,14 @@ class MyAPP(wsgi.Application):
                 snf_net.attributes['occi.network.state'] = str(
                     network['status'])
                 snf_net.attributes['occi.network.gateway'] = ''
-                if network['public'] is True:
-                    snf_net.attributes['occi.network.type'] = "Public = True"
-                else:
-                    snf_net.attributes['occi.network.type'] = "Public = False"
+                _is_public = 'True' if network['public'] is True else 'False'
+                snf_net.attributes[
+                    'occi.network.type'] = "Public = {0}".format(_is_public)
                 self.registry.add_resource(netID, snf_net, None)
 
     def refresh_compute_instances(self, snf, client):
         """Syncing registry with cyclades resources"""
-        print "@ Refresh COMPUTE INSTANCES"
+        print "Refresh Compute Instances (VMs)"
 
         servers = snf.list_servers()
         snf_keys = []
@@ -163,7 +145,7 @@ class MyAPP(wsgi.Application):
         resources = self.registry.resources
         occi_keys = resources.keys()
 
-        print occi_keys
+        print 'OCCI keys: {0}'.format(occi_keys)
         for serverID in occi_keys:
             if '/compute/' in serverID and resources[serverID].attributes[
                     'occi.compute.hostname'] == "":
@@ -267,19 +249,22 @@ class MyAPP(wsgi.Application):
 
     def __call__(self, environ, response):
         """Enable VOMS Authorization"""
-        print "SNF_OCCI application has been called!"
+        print "SNF_OCCI application has been called"
         req = Request(environ)
 
         if 'HTTP_X_AUTH_TOKEN' not in req.environ:
+            # Redirect caller to Keystone URL to get a token
             print "An authentication token has NOT been provided!"
             status = '401 Not Authorized'
             headers = [
                 ('Content-Type', 'text/html'),
-                ('Www-Authenticate', 'Keystone uri=\'{uri}\''.format(
-                    uri=KEYSTONE_URL))]
+                (
+                    'Www-Authenticate',
+                    'Keystone uri=\'{0}\''.format(KEYSTONE_URL))]
             response(status, headers)
-            print 'Ask for redirect to URL {uri}'.format(uri=KEYSTONE_URL)
+            print '401 - give caller this URL: {0}'.format(KEYSTONE_URL)
             return [str(response)]
+
         print 'An authentication token has been provided'
         environ['HTTP_AUTH_TOKEN'] = req.environ['HTTP_X_AUTH_TOKEN']
         try:
@@ -308,7 +293,7 @@ class MyAPP(wsgi.Application):
             try:
                 # Up-to-date flavors and images
                 self.refresh_images(compClient, cyclClient)
-                self.refresh_flavors_norecursive(compClient, cyclClient)
+                self.refresh_flavors(compClient, cyclClient)
                 self.refresh_network_instances(netClient)
                 self.refresh_compute_instances(compClient, cyclClient)
                 # token will be represented in self.extras
@@ -322,11 +307,12 @@ class MyAPP(wsgi.Application):
                 status = '401 Not Authorized'
                 headers = [
                     ('Content-Type', 'text/html'),
-                    ('Www-Authenticate', 'Keystone uri=\'{uri}\''.format(
-                        uri=KEYSTONE_URL))]
+                    (
+                        'Www-Authenticate',
+                        'Keystone uri=\'{0}\''.format(KEYSTONE_URL))]
                 response(status, headers)
-                print 'Ask for redirect to {uri}'.format(uri=KEYSTONE_URL)
-                return [str(response)]
+            print '401 - give caller this URL: {0}'.format(KEYSTONE_URL)
+            return [str(response)]
         else:
             print 'I have a token and a project, we can proceed'
             compClient = ComputeClient(
@@ -339,7 +325,7 @@ class MyAPP(wsgi.Application):
             # Up-to-date flavors and images
             self.refresh_images(compClient, cyclClient)
 
-            self.refresh_flavors_norecursive(compClient, cyclClient)
+            self.refresh_flavors(compClient, cyclClient)
             self.refresh_network_instances(cyclClient)
             self.refresh_compute_instances(compClient, cyclClient)
 
