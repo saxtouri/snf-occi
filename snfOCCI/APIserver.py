@@ -462,8 +462,7 @@ def tenant_app_factory(global_config, **local_config):
     return tenant_application
 
 
-def occify_terms(term_name):
-    """Occifies a term_name so that it is compliant with GFD 185"""
-    term = term_name.strip().replace(' ', '_').replace('.', '-').lower()
-    return term.replace('(', '_').replace(')', '_').replace('@', '_').replace(
-        '+', '-_')
+def occify_terms(term):
+    """:return: Occified term, compliant with GFD 185"""
+    return term.strip().lower().replace(' ', '_').replace('.', '-').replace(
+        '(', '_').replace(')', '_').replace('@', '_').replace('+', '-_')
