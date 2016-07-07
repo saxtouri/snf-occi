@@ -1,7 +1,11 @@
 SERVER_CONFIG = {
     'port': 9000,
     'hostname': 'snf-136122.vm.okeanos.grnet.gr',
-    'compute_arch': 'x86'
+    'compute_arch': 'x86',
+}
+
+REGISTRY = {
+    'hostname': 'https://okeanos-occi2.hellasgrid.gr:9000'
 }
 
 KAMAKI_CONFIG = {

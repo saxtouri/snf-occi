@@ -13,14 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from kamaki.clients.compute import ComputeClient
-from kamaki.clients.cyclades import CycladesClient
-from kamaki.cli.config import Config
-
 from occi import registry
-from occi.core_model import Mixin
-from occi.backend import MixinBackend
-from occi.extensions.infrastructure import RESOURCE_TEMPLATE, OS_TEMPLATE
+from snfOCCI import config
 
 
 class snfRegistry(registry.NonePersistentRegistry):
@@ -33,5 +27,4 @@ class snfRegistry(registry.NonePersistentRegistry):
         super(snfRegistry, self).add_resource(key, resource, extras)
 
     def set_hostname(self, hostname):
-        super(snfRegistry, self).set_hostname(
-            "https://okeanos-occi2.hellasgrid.gr:9000")
+        super(snfRegistry, self).set_hostname(config.REGISTRY.get('hostname'))
