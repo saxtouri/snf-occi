@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-# from optparse import OptionParser
 import json
 import uuid
 
@@ -15,7 +14,6 @@ from snfOCCI.network import (
 from kamaki.clients.cyclades import CycladesNetworkClient
 from snfOCCI.extensions import snf_addons
 
-# from kamaki.clients.compute import ComputeClient
 from kamaki.clients.cyclades import CycladesComputeClient as ComputeClient
 from kamaki.clients.cyclades import CycladesClient
 from kamaki.clients import astakos
@@ -32,32 +30,6 @@ from occi import core_model
 
 from wsgiref.validate import validator
 from webob import Request
-
-
-# def parse_arguments(args):
-#     kw = dict(
-#         usage="%prog [options]",
-#         description="OCCI interface to synnefo API",
-#     )
-#     parser = OptionParser(**kw)
-#     parser.disable_interspersed_args()
-
-#     parser.add_option(
-#         "--enable_voms",
-#         action="store_true", dest="enable_voms", default=False,
-#         help="Enable voms authorization")
-#     parser.add_option(
-#         "--voms_db",
-#         action="store", type="string", dest="voms_db",
-#         help="Path to sqlite database file")
-
-#     (opts, args) = parser.parse_args(args)
-
-#     if opts.enable_voms and not opts.voms_db:
-#         print "--voms_db option required"
-#         parser.print_help()
-
-#     return (opts, args)
 
 
 class MyAPP(wsgi.Application):
@@ -285,7 +257,7 @@ class MyAPP(wsgi.Application):
         print "SNF_OCCI application has been called!"
         req = Request(environ)
 
-        if not req.environ.has_key('HTTP_X_AUTH_TOKEN'):
+        if 'HTTP_X_AUTH_TOKEN' not in req.environ:
             print "An authentication token has NOT been provided!"
             status = '401 Not Authorized'
             headers = [
@@ -422,7 +394,7 @@ def tenant_application(env, start_response):
     """/v2.0/tennants"""
     print "In /v2.0/tennants"
     req = Request(env)
-    if req.environ.has_key('HTTP_X_AUTH_TOKEN'):
+    if 'HTTP_X_AUTH_TOKEN' in req.environ:
         env['HTTP_AUTH_TOKEN'] = req.environ['HTTP_X_AUTH_TOKEN']
     else:
         raise HTTPError(404, "Unauthorized access")
