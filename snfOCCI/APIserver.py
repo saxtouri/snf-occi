@@ -12,13 +12,11 @@ import uuid
 
 from snfOCCI.registry import snfRegistry
 from snfOCCI.compute import ComputeBackend, SNFBackend
-from snfOCCI.config import SERVER_CONFIG, KAMAKI_CONFIG, VOMS_CONFIG, ASTAVOMS_URL
+from snfOCCI.config import SERVER_CONFIG, KAMAKI_CONFIG, VOMS_CONFIG, KEYSTONE_URL
 from snfOCCI import snf_voms
 from snfOCCI.network import NetworkBackend, IpNetworkBackend, IpNetworkInterfaceBackend, NetworkInterfaceBackend
 from kamaki.clients.cyclades import CycladesNetworkClient
 from snfOCCI.extensions import snf_addons
-
-ASTAVOMS_IS_KEYSTONE = True
 
 # from kamaki.clients.compute import ComputeClient
 from kamaki.clients.cyclades import CycladesComputeClient as ComputeClient
@@ -37,11 +35,6 @@ from wsgiref.validate import validator
 from webob import Request
 from pprint import pprint
 
-
-if ASTAVOMS_IS_KEYSTONE:
-    KEYSTONE_URI = ASTAVOMS_URL
-else:
-    KEYSTONE_URI = 'https://okeanos-occi2.hellasgrid.gr:5000/main'
 
 
 def parse_arguments(args):
@@ -302,9 +295,9 @@ class MyAPP(wsgi.Application):
             headers = [
                 ('Content-Type', 'text/html'),
                 ('Www-Authenticate', 'Keystone uri=\'{uri}\''.format(
-                    uri=KEYSTONE_URI))]
+                    uri=KEYSTONE_URL))]
             response(status,headers)
-            print 'Ask for redirect to URL {uri}'.format(uri=KEYSTONE_URI)
+            print 'Ask for redirect to URL {uri}'.format(uri=KEYSTONE_URL)
             return [str(response)]
         print 'An authentication token has been provided'
         environ['HTTP_AUTH_TOKEN'] = req.environ['HTTP_X_AUTH_TOKEN']
@@ -346,9 +339,9 @@ class MyAPP(wsgi.Application):
                 headers = [
                     ('Content-Type', 'text/html'),
                     ('Www-Authenticate', 'Keystone uri=\'{uri}\''.format(
-                        uri=KEYSTONE_URI))]
+                        uri=KEYSTONE_URL))]
                 response(status,headers)
-                print 'Ask for redirect to {uri}'.format(uri=KEYSTONE_URI)
+                print 'Ask for redirect to {uri}'.format(uri=KEYSTONE_URL)
                 return [str(response)]
         else:
             print 'I have a token and a project, we can proceed'

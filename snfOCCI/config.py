@@ -20,4 +20,4 @@ VOMS_CONFIG = {
     'token' : 'rCfDs3MHoh_h6ZgA7KofBfxWGOeSuXeVVJ4US21I9FM'
 }
 
-ASTAVOMS_URL = 'https://okeanos-astavoms.hellasgrid.gr'
+KEYSTONE_URL = 'https://okeanos-astavoms.hellasgrid.gr'
