@@ -1,3 +1,18 @@
+# Copyright (C) 2013-2016 GRNET S.A.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 '''
 Created on Jul 31, 2013
 
@@ -15,7 +30,7 @@ from astavomaki.client import AstavomsClient
 
 # import saferun
 
-LOG =  getLogger(__name__)
+LOG = getLogger(__name__)
 
 
 # Environment variable used to pass the request context
@@ -31,42 +46,12 @@ VOMS_POLICY = "/etc/snf/voms.json"
 VOMSDIR_PATH = "/etc/grid-security/vomsdir/"
 CA_PATH = "/etc/grid-security/certificates/"
 VOMSAPI_LIB = "/usr/lib/libvomsapi.so.1"
-#VOMSAPI_LIB = "voms.x86_64 0:2.0.10-3.el6" 
+# VOMSAPI_LIB = "voms.x86_64 0:2.0.10-3.el6"
 AUTOCREATE_USERS = False
 PARAMS_ENV = 'snf_voms.params'
 
 ASTAVOMS_URL = 'https://okeanos-astavoms.hellasgrid.gr'
 ASTAVOMS_TOKEN = 'Nothing for now'
-
-
-#saferun.logger.setLevel(DEBUG)
-#@saferun.saferun
-#def test_and_log_astavoms(ssl_certs):
-#    astavoms = AstavomsClient(ASTAVOMS_URL, ASTAVOMS_TOKEN)
-#    saferun.logger.info('LALA 1')
-#    astavoms.astacert = '/etc/grid-security/certificates/TERENA-eScience-SSL-CA-3.pem'
-#    saferun.logger.info('LALA 2')
-#    saferun.logger.info('Authenticate this: {certs}'.format(certs=ssl_certs))
-#    saferun.logger.info('LALA 3')
-#    # Not tryied that yet, do it next
-#    from kamaki.clients.utils import https
-#    #https.patch_with_certs(CA_PATH)
-#    https.patch_ignore_ssl()
-#    r = astavoms.authenticate(**ssl_certs)
-#    from kamaki.clients.utils import https
-#    saferun.logger.info('SAFERUN RESPONSE: {0}'.format(json.dumps(r, indent=2)))
-#    return r
-
-
-#@saferun.saferun
-#def compare_results(old, new):
-#    saferun.logger.info('OLD: {old}\nNEW:{new}'.format(old=old, new=new))
-#    keydiff = set(old).symmetric_difference(new)
-#    saferun.logger.info('KEY DIFF: %s', keydiff)
-#    for k in set(old).intersection(new):
-#        ov, nv = old[k], new[k]
-#        msg = '  OK' if ov == nv else '  diff: %s != %s' % (ov, nv)
-#        saferun.logger.info('Check key %s ... %s' % (k, msg))
 
 
 class VomsError():
@@ -113,12 +98,13 @@ class VomsError():
         self.code = code
         self.title = title
 
+
 class VomsAuthN():
     """Filter that checks for the SSL data in the reqest.
 
     Sets 'ssl' in the context as a dictionary containing this data.
     """
-    
+
     def __init__(self, *args, **kwargs):
         self.astavoms = AstavomsClient(ASTAVOMS_URL, ASTAVOMS_TOKEN)
         # VOMS stuff
@@ -134,7 +120,7 @@ class VomsAuthN():
                 'No loading of VOMS json file',
                 details='The VOMS json file located in %s was not loaded (%s:, e)' % (
                     VOMS_POLICY, type(e), e))
-        
+
         self._no_verify = False
 
         #super(VomsAuthN, self).__init__(*args, **kwargs)
@@ -151,14 +137,14 @@ class VomsAuthN():
 
     def _get_voms_info(self, ssl_info):
         """Extract voms info from ssl_info and return dict with it."""
-	# Use astavoms instead of doing it by yourself
-	# astaresults = test_and_log_astavoms(ssl_info)
+    # Use astavoms instead of doing it by yourself
+    # astaresults = test_and_log_astavoms(ssl_info)
 
         from kamaki.clients.utils import https
         https.patch_ignore_ssl()
         return self.astavoms.authenticate(**ssl_info)
-        # STOP HERE       
-        
+        # STOP HERE
+
         # Keep this until verification is supported in astavoms
         try:
             cert, chain = self._get_cert_chain(ssl_info)
@@ -167,15 +153,14 @@ class VomsAuthN():
                               'SSL data not verified',
                               details=CONTEXT_ENV)
 
-
         with voms_helper.VOMS(VOMSDIR_PATH,
                               CA_PATH, VOMSAPI_LIB) as v:
 
             if self._no_verify:
                 v.set_no_verify()
-               
+
             voms_data = v.retrieve(cert, chain)
-            
+
             if not voms_data:
                 # TODO(aloga): move this to a keystone exception
                 raise VomsError(v.error.value)
@@ -195,7 +180,7 @@ class VomsAuthN():
                     break
                 d["fqans"].append(fqan)
 
-	# compare_results(d, astaresults)
+    # compare_results(d, astaresults)
 
         return d
 
@@ -210,9 +195,9 @@ class VomsAuthN():
         role = l.pop().split("=")[-1]
         vogroup = "/".join(l)
         return (vogroup, role, capability)
-    
+
     def _process_environ(self, environ):
-        
+
         LOG.warning("Getting the environment parameters...")
         # the environment variable CONTENT_LENGTH may be empty or missing
         try:
@@ -222,9 +207,9 @@ class VomsAuthN():
             raise ClientError(
                 'Not auth method provided',
                 details='The request body is empty, while it should contain the authentication method')
-            
+
         request_body = environ['wsgi.input'].read(request_body_size)
-        
+
         # print request_body
         request_body = request_body.replace("true","\"true\"")
         request_body = request_body.replace('"','\'' )  
@@ -242,8 +227,7 @@ class VomsAuthN():
             if k.startswith('_'):
                 continue
             params[k] = v
-            
-        
+
         environ[PARAMS_ENV] = params
         # print environ[PARAMS_ENV]
 
@@ -258,12 +242,12 @@ class VomsAuthN():
                 return True
             else:
                 raise ClientError(
-                'Error in json',
-                details='Error in JSON, voms must be set to true')
-            
+                    'Error in json',
+                    details='Error in JSON, voms must be set to true')
+
         return False
 
-    def authenticate(self,ssl_data):
+    def authenticate(self, ssl_data):
 
         try:
             voms_info = self._get_voms_info(ssl_data)
@@ -271,13 +255,12 @@ class VomsAuthN():
             raise e
         user_dn = voms_info["user"]
         user_vo = voms_info["voname"]
-        user_fqans = voms_info["fqans"] 
+        user_fqans = voms_info["fqans"]
 
         return (
             user_dn, user_vo, user_fqans, voms_info['snf:token'],
             voms_info['snf:project'])
 
-          
     def process_request(self, environ):
         print "Inside process_request!!!!"
         if not self.is_applicable(environ):
@@ -295,16 +278,15 @@ class VomsAuthN():
 
         voms_info = self._get_voms_info(ssl_dict)
 
-        params  = environ[PARAMS_ENV]
-        
+        params = environ[PARAMS_ENV]
+
         tenant_from_req = params["auth"].get("tenantName", None)
-        
+
         user_dn = voms_info["user"]
         user_vo = voms_info["voname"]
-        user_fqans = voms_info["fqans"] 
+        user_fqans = voms_info["fqans"]
         environ['REMOTE_USER'] = user_dn
-        
+
         return (
             user_dn, user_vo, user_fqans, voms_info['snf:token'],
             voms_info['snf:project'])
-

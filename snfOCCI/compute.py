@@ -1,35 +1,17 @@
-# Copyright 2012-2013 GRNET S.A. All rights reserved.
+# Copyright (C) 2012-2013 GRNET S.A.
 #
-# Redistribution and use in source and binary forms, with or
-# without modification, are permitted provided that the following
-# conditions are met:
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#   1. Redistributions of source code must retain the above
-#     copyright notice, this list of conditions and the following
-#     disclaimer.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#   2. Redistributions in binary form must reproduce the above
-#     copyright notice, this list of conditions and the following
-#     disclaimer in the documentation and/or other materials
-#     provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY GRNET S.A. ``AS IS'' AND ANY EXPRESS
-# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL GRNET S.A OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
-# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-# The views and conclusions contained in the software and
-# documentation are those of the authors and should not be
-# interpreted as representing official policies, either expressed
-# or implied, of GRNET S.A.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
 from snfOCCI.config import SERVER_CONFIG
@@ -44,7 +26,8 @@ from occi.exceptions import HTTPError
 from base64 import b64encode, b64decode
 import json, yaml
 
-#Compute Backend for snf-occi-server
+# Compute Backend for snf-occi-server
+
 
 class MyBackend(KindBackend, ActionBackend):
 
@@ -55,10 +38,10 @@ class MyBackend(KindBackend, ActionBackend):
 
     def replace(self, old, new, extras):
         raise HTTPError(501, "Replace is currently no applicable")
-    
-    
+
+
 class SNFBackend(MixinBackend, ActionBackend):
-    
+
     pass
 
 
@@ -68,9 +51,7 @@ class ComputeBackend(MyBackend):
     '''
 
     def create(self, entity, extras):
-
-        #Creating new compute instance
-        
+        # Creating new compute instance
         try:
 
             snf_network = extras['snf_network']
@@ -84,23 +65,23 @@ class ComputeBackend(MyBackend):
                     elif mixin.related[0].term == 'resource_tpl':
                         flavor = mixin
                         flavor_id = mixin.attributes['occi.core.id']
-                
+
 
             vm_name = entity.attributes['occi.core.title']
-            
+
             user_data = None
             user_pub_key = None
             meta_json = None
             personality = []
-            
+
             if entity.attributes.has_key('org.openstack.compute.user_data'):
                             user_data = b64decode(entity.attributes['org.openstack.compute.user_data'])
-                            #user_data = entity.attributes['org.openstack.compute.user_data']
-           
-                        
+                            # user_data = entity.attributes['org.openstack.compute.user_data']
+
+
             if entity.attributes.has_key('org.openstack.credentials.publickey.data'):
                             user_pub_key = entity.attributes['org.openstack.credentials.publickey.data']
-            
+
            # Implementation for the meta.json file to use the respective NoCloud cloudinit driver
            # if user_data and user_pub_key:
            #     meta_json = json.dumps({'dsmode':'net','public-keys':user_pub_key,'user-data': user_data}, sort_keys=True,indent=4, separators=(',', ': ') )
@@ -108,7 +89,7 @@ class ComputeBackend(MyBackend):
             #    meta_json = json.dumps({'dsmode':'net','user-data': user_data}, sort_keys=True,indent=4, separators=(',', ': ') )
            # elif user_pub_key:
             #    meta_json = json.dumps({'dsmode':'net','public-keys':user_pub_key}, sort_keys=True,indent=4, separators=(',', ': ') )
-           
+
           #  if meta_json:
            #     print "!!!!!!!!!!!!!!!!!!!!!!!!!!!! CONTEXTUALIZATION!!!!!!!!!!!!!!!!!!!!!!"
            #     personality.append({'contents':b64encode(meta_json),
@@ -116,7 +97,7 @@ class ComputeBackend(MyBackend):
             #    info = snf.create_server(vm_name, flavor_id, image_id,personality=personality)
            # else:
             #    info = snf.create_server(vm_name, flavor_id, image_id)
-            
+
             if user_data:
                 #userDataDict = dict([('user-data', user_data)])
                 #userData = yaml.dump(userDataDict)
@@ -125,7 +106,7 @@ class ComputeBackend(MyBackend):
                 pub_keyDict = dict([('public-keys',user_pub_key)])
                 pub_key = yaml.dump(pub_keyDict)
 
-	    # kwargs = dict(project_id='6d9ec935-fcd4-4ae1-a3a0-10e612c4f867')
+        # kwargs = dict(project_id='6d9ec935-fcd4-4ae1-a3a0-10e612c4f867')
             kwargs = dict(project_id=extras.get('snf_project', None))
 
             if user_data and user_pub_key:
@@ -154,7 +135,7 @@ class ComputeBackend(MyBackend):
                         else:
                             raise ce
             else:
-		print 'Create a server with some attributes...'
+                print 'Create a server with some attributes...'
                 for retries in range(2):
                     try:
                         info = snf.create_server(vm_name, flavor_id, image_id, **kwargs)
@@ -165,19 +146,17 @@ class ComputeBackend(MyBackend):
                             snf_network.create_floatingip(**kwargs)
                         else:
                             raise ce
-                        
-           
+
             entity.attributes['occi.compute.state'] = 'inactive'
             entity.attributes['occi.core.id'] = str(info['id'])
             entity.attributes['occi.compute.architecture'] = SERVER_CONFIG['compute_arch']
             entity.attributes['occi.compute.cores'] = flavor.attributes['occi.compute.cores']
             entity.attributes['occi.compute.memory'] = flavor.attributes['occi.compute.memory']
-           
-           
-            
-            entity.actions = [infrastructure.STOP,
-                               infrastructure.SUSPEND,
-                               infrastructure.RESTART]
+
+            entity.actions = [
+                infrastructure.STOP,
+                infrastructure.SUSPEND,
+                infrastructure.RESTART]
 
             # entity.attributes['occi.compute.hostname'] = SERVER_CONFIG['hostname'] % {'id':info['id']}
             info['adminPass']= ""
@@ -296,5 +275,3 @@ class ComputeBackend(MyBackend):
 
             elif action == infrastructure.SUSPEND:
                 raise HTTPError(501, "This actions is currently no applicable")
-            
-            

@@ -1,8 +1,3 @@
-'''
-Created on Jul 30, 2013
-
-@author: nassia
-'''
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2012 Spanish National Research Council
@@ -20,8 +15,6 @@ Created on Jul 30, 2013
 # under the License.
 
 import ctypes
-
-#import M2Crypto
 
 
 class _voms(ctypes.Structure):

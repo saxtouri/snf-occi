@@ -16,6 +16,7 @@
 from occi.backend import ActionBackend, KindBackend, MixinBackend
 from occi.exceptions import HTTPError
 
+
 class NetworkBackend(KindBackend, ActionBackend):
     """Network Backend for snf-occi-server"""
     def create(self, entity, extras):
@@ -47,4 +48,3 @@ class NetworkInterfaceBackend(KindBackend):
 
     def replace(self, old, new, extras):
         raise HTTPError(501, "Currently not supported.")
-
