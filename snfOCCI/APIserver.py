@@ -1,66 +1,63 @@
 #!/usr/bin/env python
 
-import inspect
-import re
-import sys
-from optparse import OptionParser, OptionValueError
-import string
-import sqlite3
-import os
+# from optparse import OptionParser
 import json
 import uuid
 
 from snfOCCI.registry import snfRegistry
 from snfOCCI.compute import ComputeBackend, SNFBackend
-from snfOCCI.config import SERVER_CONFIG, KAMAKI_CONFIG, VOMS_CONFIG, KEYSTONE_URL
+from snfOCCI.config import (
+    SERVER_CONFIG, KAMAKI_CONFIG, VOMS_CONFIG, KEYSTONE_URL)
 from snfOCCI import snf_voms
-from snfOCCI.network import NetworkBackend, IpNetworkBackend, IpNetworkInterfaceBackend, NetworkInterfaceBackend
+from snfOCCI.network import (
+    NetworkBackend, IpNetworkBackend, IpNetworkInterfaceBackend,
+    NetworkInterfaceBackend)
 from kamaki.clients.cyclades import CycladesNetworkClient
 from snfOCCI.extensions import snf_addons
 
 # from kamaki.clients.compute import ComputeClient
 from kamaki.clients.cyclades import CycladesComputeClient as ComputeClient
 from kamaki.clients.cyclades import CycladesClient
-from kamaki.clients import astakos, utils
+from kamaki.clients import astakos
 from kamaki.clients import ClientError
 
 from occi.core_model import Mixin, Resource
 from occi.backend import MixinBackend
-from occi.extensions.infrastructure import COMPUTE, START, STOP, SUSPEND, RESTART, RESOURCE_TEMPLATE, OS_TEMPLATE, NETWORK, IPNETWORK, NETWORKINTERFACE,IPNETWORKINTERFACE 
+from occi.extensions.infrastructure import (
+    COMPUTE, START, STOP, SUSPEND, RESTART, RESOURCE_TEMPLATE, OS_TEMPLATE,
+    NETWORK, IPNETWORK, NETWORKINTERFACE, IPNETWORKINTERFACE)
 from occi import wsgi
 from occi.exceptions import HTTPError
 from occi import core_model
 
 from wsgiref.validate import validator
 from webob import Request
-from pprint import pprint
 
 
+# def parse_arguments(args):
+#     kw = dict(
+#         usage="%prog [options]",
+#         description="OCCI interface to synnefo API",
+#     )
+#     parser = OptionParser(**kw)
+#     parser.disable_interspersed_args()
 
-def parse_arguments(args):
-    kw = dict(
-        usage="%prog [options]",
-        description="OCCI interface to synnefo API",
-    )
-    parser = OptionParser(**kw)
-    parser.disable_interspersed_args()
+#     parser.add_option(
+#         "--enable_voms",
+#         action="store_true", dest="enable_voms", default=False,
+#         help="Enable voms authorization")
+#     parser.add_option(
+#         "--voms_db",
+#         action="store", type="string", dest="voms_db",
+#         help="Path to sqlite database file")
 
-    parser.add_option(
-        "--enable_voms",
-        action="store_true", dest="enable_voms", default=False,
-        help="Enable voms authorization")
-    parser.add_option(
-        "--voms_db",
-        action="store", type="string", dest="voms_db",
-        help="Path to sqlite database file")
+#     (opts, args) = parser.parse_args(args)
 
-    (opts, args) = parser.parse_args(args)
+#     if opts.enable_voms and not opts.voms_db:
+#         print "--voms_db option required"
+#         parser.print_help()
 
-    if opts.enable_voms and not opts.voms_db:
-        print "--voms_db option required"
-        parser.print_help()
-
-    return (opts, args)
+#     return (opts, args)
 
 
 class MyAPP(wsgi.Application):
@@ -70,7 +67,7 @@ class MyAPP(wsgi.Application):
         """Initialization of the WSGI OCCI application for synnefo"""
         global ENABLE_VOMS, VOMS_DB
         ENABLE_VOMS = VOMS_CONFIG['enable_voms']
-        super(MyAPP,self).__init__(registry=snfRegistry())
+        super(MyAPP, self).__init__(registry=snfRegistry())
         self._register_backends()
         VALIDATOR_APP = validator(self)
 
