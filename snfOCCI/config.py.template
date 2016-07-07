@@ -1,0 +1,24 @@
+#  Copy this file as config.py and fill in the appropriate values
+
+COMPUTE = {
+    'arch': 'x86',
+}
+
+KAMAKI = {
+    'compute_url': 'https://cyclades.example.com/compute/v2.0/',
+    'astakos_url': 'https://accounts.example.com/identity/v2.0/',
+    'network_url': 'https://cyclades.example.com/network/v2.0'
+}
+
+VOMS_CONFIG = {
+    'enable_voms': 'True',
+    'voms_policy': '/etc/snf/voms.json',
+    'vomsdir_path': '/etc/grid-security/vomsdir/',
+    'ca_path': '/etc/grid-security/certificates/',
+    'cert_dir': '/etc/ssl/certs/',
+    'key_dir': '/etc/ssl/private/',
+    'token': 'synnefo token'
+}
+
+KEYSTONE_URL = 'https://okeanos-astavoms.example.com'
+HOSTNAME = 'https://this-host.example.com'

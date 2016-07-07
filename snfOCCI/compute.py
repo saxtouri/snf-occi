@@ -14,7 +14,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-from snfOCCI.config import SERVER_CONFIG
+from snfOCCI import config
 
 from kamaki.clients import ClientError
 
@@ -101,7 +101,7 @@ class ComputeBackend(MyBackend):
             entity.attributes.update((
                 ('occi.compute.state', 'inactive'),
                 ('occi.core.id', str(info['id'])),
-                ('occi.compute.architecture', SERVER_CONFIG['compute_arch']),
+                ('occi.compute.architecture', config.COMPUTE['arch']),
                 (
                     'occi.compute.cores',
                     flavor.attributes['occi.compute.cores']),

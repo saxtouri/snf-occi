@@ -27,4 +27,4 @@ class snfRegistry(registry.NonePersistentRegistry):
         super(snfRegistry, self).add_resource(key, resource, extras)
 
     def set_hostname(self, hostname):
-        super(snfRegistry, self).set_hostname(config.REGISTRY.get('hostname'))
+        super(snfRegistry, self).set_hostname(config.HOSTNAME)

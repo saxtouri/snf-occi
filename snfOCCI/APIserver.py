@@ -18,8 +18,8 @@ import uuid
 
 from snfOCCI.registry import snfRegistry
 from snfOCCI.compute import ComputeBackend, SNFBackend
-from snfOCCI.config import (
-    SERVER_CONFIG, KAMAKI_CONFIG, VOMS_CONFIG, KEYSTONE_URL)
+from snfOCCI import config
+from snfOCCI.config import VOMS_CONFIG, KEYSTONE_URL
 from snfOCCI import snf_voms
 from snfOCCI.network import (
     NetworkBackend, IpNetworkBackend, IpNetworkInterfaceBackend,
@@ -172,7 +172,7 @@ class MyAPP(wsgi.Application):
                 resource.attributes['occi.core.id'] = key
                 resource.attributes['occi.compute.state'] = 'inactive'
                 resource.attributes['occi.compute.architecture'] = (
-                    SERVER_CONFIG['compute_arch'])
+                    config.COMPUTE['arch'])
                 resource.attributes['occi.compute.cores'] = str(
                     flavor['vcpus'])
                 resource.attributes['occi.compute.memory'] = str(flavor['ram'])
@@ -273,7 +273,7 @@ class MyAPP(wsgi.Application):
         except KeyError:
             print "No project provided, go to plan B"
             astakosClient = astakos.AstakosClient(
-                KAMAKI_CONFIG['astakos_url'], environ['HTTP_AUTH_TOKEN'])
+                config.KAMAKI['astakos_url'], environ['HTTP_AUTH_TOKEN'])
             projects = astakosClient.get_projects()
             user_info = astakosClient.authenticate()
             user_uuid = user_info['access']['user']['id']
@@ -285,11 +285,11 @@ class MyAPP(wsgi.Application):
                     break
         if ENABLE_VOMS:
             compClient = ComputeClient(
-                KAMAKI_CONFIG['compute_url'], environ['HTTP_AUTH_TOKEN'])
+                config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
             cyclClient = CycladesClient(
-                KAMAKI_CONFIG['compute_url'], environ['HTTP_AUTH_TOKEN'])
+                config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
             netClient = CycladesNetworkClient(
-                KAMAKI_CONFIG['network_url'], environ['HTTP_AUTH_TOKEN'])
+                config.KAMAKI['network_url'], environ['HTTP_AUTH_TOKEN'])
             try:
                 # Up-to-date flavors and images
                 self.refresh_images(compClient, cyclClient)
@@ -316,11 +316,11 @@ class MyAPP(wsgi.Application):
         else:
             print 'I have a token and a project, we can proceed'
             compClient = ComputeClient(
-                KAMAKI_CONFIG['compute_url'], environ['HTTP_AUTH_TOKEN'])
+                config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
             cyclClient = CycladesClient(
-                KAMAKI_CONFIG['compute_url'], environ['HTTP_AUTH_TOKEN'])
+                config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
             netClient = CycladesNetworkClient(
-                KAMAKI_CONFIG['network_url'], environ['HTTP_AUTH_TOKEN'])
+                config.KAMAKI['network_url'], environ['HTTP_AUTH_TOKEN'])
 
             # Up-to-date flavors and images
             self.refresh_images(compClient, cyclClient)
@@ -351,7 +351,7 @@ def application(env, start_response):
     print "@ refresh_user authentication details"
     pool = False
     astakosClient = astakos.AstakosClient(
-        KAMAKI_CONFIG['astakos_url'], env['HTTP_AUTH_TOKEN'], use_pool=pool)
+        config.KAMAKI['astakos_url'], env['HTTP_AUTH_TOKEN'], use_pool=pool)
     user_details = astakosClient.authenticate()
 
     response = {
@@ -402,7 +402,7 @@ def tenant_application(env, start_response):
     print "@ refresh_user authentication details"
     pool = False
     astakosClient = astakos.AstakosClient(
-        KAMAKI_CONFIG['astakos_url'], env['HTTP_AUTH_TOKEN'], use_pool=pool)
+        config.KAMAKI['astakos_url'], env['HTTP_AUTH_TOKEN'], use_pool=pool)
     user_details = astakosClient.authenticate()
 
     response = {
