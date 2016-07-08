@@ -13,14 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import json
 import uuid
 
 from snfOCCI.registry import snfRegistry
 from snfOCCI.compute import ComputeBackend, SNFBackend
 from snfOCCI import config
 from snfOCCI.config import VOMS_CONFIG, KEYSTONE_URL
-from snfOCCI import snf_voms
 from snfOCCI.network import (
     NetworkBackend, IpNetworkBackend, IpNetworkInterfaceBackend,
     NetworkInterfaceBackend)
@@ -335,99 +333,6 @@ class MyAPP(wsgi.Application):
                 security=None, token=environ['HTTP_AUTH_TOKEN'],
                 snf=compClient, client=cyclClient, snf_network=netClient,
                 snf_project=snf_project)
-
-
-def application(env, start_response):
-    """/v2.0/tokens"""
-    print "In /v2.0/tokens"
-    t = snf_voms.VomsAuthN()
-    user_dn, user_vo, user_fqans, snf_token, snf_project = t.process_request(
-        env)
-
-    print (user_dn, user_vo, user_fqans)
-    env['HTTP_AUTH_TOKEN'] = snf_token
-    env['SNF_PROJECT'] = snf_project
-    # Get user authentication details
-    print "@ refresh_user authentication details"
-    pool = False
-    astakosClient = astakos.AstakosClient(
-        config.KAMAKI['astakos_url'], env['HTTP_AUTH_TOKEN'], use_pool=pool)
-    user_details = astakosClient.authenticate()
-
-    response = {
-        'access': {
-            'token': {
-                'issued_at': '',
-                'expires': user_details['access']['token']['expires'],
-                'id': env['HTTP_AUTH_TOKEN']
-            },
-            'serviceCatalog': [],
-            'user': {
-                'username': user_dn,
-                'roles_links': user_details['access']['user']['roles_links'],
-                'id': user_details['access']['user']['id'],
-                'roles': [],
-                'name': user_dn
-            },
-            'metadata': {
-                'is_admin': 0,
-                'roles': user_details['access']['user']['roles']
-            }
-        }
-    }
-    status = '200 OK'
-    headers = [('Content-Type', 'application/json')]
-    start_response(status, headers)
-    body = json.dumps(response)
-    print body
-    return [body]
-
-
-def app_factory(global_config, **local_config):
-    """This function wraps our simple WSGI app so it
-    can be used with paste.deploy"""
-    return application
-
-
-def tenant_application(env, start_response):
-    """/v2.0/tennants"""
-    print "In /v2.0/tennants"
-    req = Request(env)
-    if 'HTTP_X_AUTH_TOKEN' in req.environ:
-        env['HTTP_AUTH_TOKEN'] = req.environ['HTTP_X_AUTH_TOKEN']
-    else:
-        raise HTTPError(404, "Unauthorized access")
-
-    # Get user authentication details
-    print "@ refresh_user authentication details"
-    pool = False
-    astakosClient = astakos.AstakosClient(
-        config.KAMAKI['astakos_url'], env['HTTP_AUTH_TOKEN'], use_pool=pool)
-    user_details = astakosClient.authenticate()
-
-    response = {
-        'tenants_links': [],
-        'tenants': [
-            {
-                'description': 'Instances of EGI Federated Clouds TF',
-                'enabled': True,
-                'id': user_details['access']['user']['id'],
-                'name': 'ops'
-            },
-        ]
-    }
-    status = '200 OK'
-    headers = [('Content-Type', 'application/json'), ]
-    start_response(status, headers)
-    body = json.dumps(response)
-    print body
-    return [body]
-
-
-def tenant_app_factory(global_config, **local_config):
-    """This function wraps our simple WSGI app so it
-    can be used with paste.deploy"""
-    return tenant_application
 
 
 def occify_terms(term):
