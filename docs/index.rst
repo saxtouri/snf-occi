@@ -3,18 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-snf-occi's documentation!
-====================================
+About snf-occi
+==============
 
-**snf-occi** snf-occi implements the OCCI specification on top of synnefo’s API in order to achieve greater interoperability in common tasks referring cyclades management. This module is a translation bridge between OCCI and the Openstack API and is designed to be as independent as possible from the rest IaaS, providing an OCCI compatibility layer to other services using Openstack API. 
+**snf-occi** snf-occi implements the OCCI specification on top of Synnefo’s API in order to achieve greater interoperability in common tasks referring cyclades management. This module is a translation bridge between OCCI and the Openstack API and is designed to be as independent as possible from the rest IaaS, providing an OCCI compatibility layer to other services using Openstack API. 
 
-**snf-occi** is based in modules provided by kamaki cli-tool when dealing with REST API calls to Openstack.
+**snf-occi** is based in modules provided by kamaki library-tool when dealing with REST API calls to Openstack.
 
 .. toctree::
    :maxdepth: 2
 
 About Open Cloud Computing Interface (OCCI)
-----------
+-------------------------------------------
 The current OCCI specification consists of the following three documents:
 
 * `OCCI Core <http://ogf.org/documents/GFD.183.pdf>`_
@@ -25,7 +25,7 @@ The master document for the OCCI specification is at `OCCI Specification <http:/
 
 OCCI and Cyclades
 -----------------
-The OCCI implementation in Cyclades is going to be based in the OCCI Infrastructure specification, in which common Cloud IaaS components are described. The correspondence between OCCI and Cyclades is as follows:
+The OCCI implementation for Cyclades is going to be based in the OCCI 1.1 Infrastructure specification, in which common Cloud IaaS components are described. The correspondence between OCCI and Cyclades is as follows:
 
 +-------------------------+-------------------------+
 |OCCI                     |Cyclades                 |
@@ -43,11 +43,11 @@ The OCCI implementation in Cyclades is going to be based in the OCCI Infrastruct
 
 
  
-**Note:** Metadata info in synnefo's servers cannot be represented (clearly) using OCCI's components.
+**Note:** Metadata info in Synnefo's servers cannot be represented (clearly) using OCCI's components.
 
 
 OCCI requirements
-------------------
+-----------------
 Due to OCCI's structure there cannot be straightforward mapping to Cyclades/OpenStack API. The missing elements are networking and storage capabilities using current Cyclades API.
 
 OCCI operations
@@ -100,11 +100,10 @@ Features:
 
 Current progress
 =================
-By now we have considered implementing only the **Compute** backend of the OCCI to Cyclades/Openstack API bridge and we are planning to extend it for **networking** and **storage** capabilities.
+By now we have considered implementing only the **Compute** backend of the OCCI to Cyclades/Openstack API bridge and we are planning to extend it for **networking** and **storage** capabilities. It is possible to implement the remaining capabilities directly for OCCI 1.2, though.
 
 Installation
 -------------
-
 First, you need to install the required dependencies which can be found here:
 
 * `pyssf <https://code.grnet.gr/attachments/download/1182/pyssf-0.4.5.tar>`_
@@ -153,6 +152,19 @@ For the examples below we assume server is running on localhost (port 8888) and 
   ::
   
     curl -v -X DELETE localhost:8888/compute/$ID -H 'Auth-Token: $AUTH'
+
+Testing
+-------
+
+A smart way to test the application is by using the `egifedcloud/fedcloud-userinterface`. Make sure you have valid and authorized proxy certificates in your ${HOME}/.globus directory, and then start a cointainer shell loaded with all necessary client tools. E.g., to perform a "list servers" operation:
+
+  ::
+
+    $ docker run -v /home/saxtouri/.globus:/root/.globus -it egifedcloud/fedcloud-userinterface /bin/bash
+    # fetch-crl -p 20
+    # voms-proxy-init --voms fedcloud.egi.eu -rfc
+      Your proxy is stored at /tmp/x509up_u0
+    # occi --endpoint https://snf-occi.example.com --action list --resource compute -n x509 -x /tmp/x509up_u0 -X
 
 
 Indices and tables
