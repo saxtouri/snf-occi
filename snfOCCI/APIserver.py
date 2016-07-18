@@ -183,11 +183,11 @@ class MyAPP(wsgi.Application):
                     resource.attributes['occi.compute.hostname'] = ""
                 self.registry.add_resource(key, resource, None)
 
+                link_id = str(uuid.uuid4())
                 net_str = (
                     "http://schemas.ogf.org/occi/infrastructure#"
                     "networkinterface{0}".format(link_id))
                 for netKey in networkIDs:
-                    link_id = str(uuid.uuid4())
                     NET_LINK = core_model.Link(
                         net_str,
                         NETWORKINTERFACE, [IPNETWORKINTERFACE], resource,
