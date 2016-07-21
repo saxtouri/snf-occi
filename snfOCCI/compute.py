@@ -50,7 +50,7 @@ class ComputeBackend(MyBackend):
         try:
 
             snf_network = extras['snf_network']
-            snf = extras['client']
+            snf_compute = extras['snf_compute']
 
             for mixin in entity.mixins:
                 print mixin
@@ -88,7 +88,7 @@ class ComputeBackend(MyBackend):
             vm_name = entity.attributes['occi.core.title']
             for retries in range(2):
                 try:
-                    info = snf.create_server(
+                    info = snf_compute.create_server(
                         vm_name, flavor_id, image_id, **kwargs)
                     break
                 except ClientError as ce:
@@ -126,10 +126,10 @@ class ComputeBackend(MyBackend):
 
     def retrieve(self, entity, extras):
         """Triggering cyclades to retrieve up to date information"""
-        snf = extras['snf']
+        snf_compute = extras['snf_compute']
 
         vm_id = int(entity.attributes['occi.core.id'])
-        vm_info = snf.get_server_details(vm_id)
+        vm_info = snf_compute.get_server_details(vm_id)
         vm_state = vm_info['status']
 
         status_dict = dict(
@@ -152,9 +152,9 @@ class ComputeBackend(MyBackend):
 
     def delete(self, entity, extras):
         """Deleting compute instance"""
-        snf = extras['snf']
+        snf_compute = extras['snf_compute']
         vm_id = int(entity.attributes['occi.core.id'])
-        snf.delete_server(vm_id)
+        snf_compute.delete_server(vm_id)
         print "Deleting VM" + str(vm_id)
 
     def get_vm_actions(self, entity, vm_state):
@@ -177,11 +177,10 @@ class ComputeBackend(MyBackend):
 
     def action(self, entity, action, attributes, extras):
         """Triggering action to compute instances"""
-        client = extras['client']
-        snf = extras['snf']
+        snf_compute = extras['snf_compute']
 
         vm_id = int(entity.attributes['occi.core.id'])
-        vm_info = snf.get_server_details(vm_id)
+        vm_info = snf_compute.get_server_details(vm_id)
         vm_state = vm_info['status']
 
         # Define the allowed actions depending on the state of the VM
@@ -196,12 +195,12 @@ class ComputeBackend(MyBackend):
                         vm_state))
             elif action == infrastructure.START:
                 print "Starting VM {0}".format(vm_id)
-                client.start_server(vm_id)
+                snf_compute.start_server(vm_id)
             elif action == infrastructure.STOP:
                 print "Stopping VM {0}".format(vm_id)
-                client.shutdown_server(vm_id)
+                snf_compute.shutdown_server(vm_id)
             elif action == infrastructure.RESTART:
                 print "Restarting VM {0}".format(vm_id)
-                snf.reboot_server(vm_id)
+                snf_compute.reboot_server(vm_id)
             elif action == infrastructure.SUSPEND:
                 raise HTTPError(501, "Actions not applicable")

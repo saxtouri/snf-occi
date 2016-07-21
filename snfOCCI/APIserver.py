@@ -25,8 +25,7 @@ from snfOCCI.network import (
 from kamaki.clients.cyclades import CycladesNetworkClient
 from snfOCCI.extensions import snf_addons
 
-from kamaki.clients.cyclades import CycladesComputeClient as ComputeClient
-from kamaki.clients.cyclades import CycladesClient
+from kamaki.clients.cyclades import CycladesComputeClient
 from kamaki.clients import astakos
 from kamaki.clients import ClientError
 
@@ -78,10 +77,10 @@ class MyAPP(wsgi.Application):
         self.register_backend(snf_addons.SNF_USER_DATA_EXT, SNFBackend())
         self.register_backend(snf_addons.SNF_KEY_PAIR_EXT,  SNFBackend())
 
-    def refresh_images(self, snf, client):
+    def refresh_images(self, snf_compute):
         print "Refresh images"
         try:
-            images = snf.list_images()
+            images = snf_compute.list_images()
             for image in images:
                 IMAGE_ATTRIBUTES = {'occi.core.id': str(image['id'])}
                 IMAGE = Mixin(
@@ -93,9 +92,9 @@ class MyAPP(wsgi.Application):
         except:
             raise HTTPError(404, "Unauthorized access")
 
-    def refresh_flavors(self, snf, client):
+    def refresh_flavors(self, snf_compute):
         print "Refresh flavors"
-        flavors = snf.list_flavors(detail=True)
+        flavors = snf_compute.list_flavors(detail=True)
         for flavor in flavors:
             FLAVOR_ATTRIBUTES = {
                 'occi.core.id': flavor['id'],
@@ -110,9 +109,9 @@ class MyAPP(wsgi.Application):
                 title='FLAVOR', attributes=FLAVOR_ATTRIBUTES)
             self.register_backend(FLAVOR, MixinBackend())
 
-    def refresh_network_instances(self, client):
+    def refresh_network_instances(self, snf_network):
         print "Refresh Networks"
-        network_details = client.list_networks(detail=True)
+        network_details = snf_network.list_networks(detail=True)
         resources = self.registry.resources
         occi_keys = resources.keys()
 
@@ -131,11 +130,11 @@ class MyAPP(wsgi.Application):
                     'occi.network.type'] = "Public = {0}".format(_is_public)
                 self.registry.add_resource(netID, snf_net, None)
 
-    def refresh_compute_instances(self, snf, client):
+    def refresh_compute_instances(self, snf_compute):
         """Syncing registry with cyclades resources"""
         print "Refresh Compute Instances (VMs)"
 
-        servers = snf.list_servers()
+        servers = snf_compute.list_servers()
         snf_keys = []
         for server in servers:
             snf_keys.append(str(server['id']))
@@ -153,12 +152,12 @@ class MyAPP(wsgi.Application):
         # Compute instances in synnefo not available in registry
         diff = [x for x in snf_keys if '/compute/'+x not in occi_keys]
         for key in diff:
-            details = snf.get_server_details(int(key))
-            flavor = snf.get_flavor_details(details['flavor']['id'])
+            details = snf_compute.get_server_details(int(key))
+            flavor = snf_compute.get_flavor_details(details['flavor']['id'])
             try:
                 print "Get image of flavor {flavor}, VM {vm}".format(
                     flavor=details['flavor']['id'], vm=key)
-                image = snf.get_image_details(details['image']['id'])
+                image = snf_compute.get_image_details(details['image']['id'])
                 for i in self.registry.backends:
                     if i.term == occify_terms(str(image['name'])):
                         rel_image = i
@@ -183,11 +182,11 @@ class MyAPP(wsgi.Application):
                     resource.attributes['occi.compute.hostname'] = ""
                 self.registry.add_resource(key, resource, None)
 
-                link_id = str(uuid.uuid4())
-                net_str = (
-                    "http://schemas.ogf.org/occi/infrastructure#"
-                    "networkinterface{0}".format(link_id))
                 for netKey in networkIDs:
+                    link_id = str(uuid.uuid4())
+                    net_str = (
+                        "http://schemas.ogf.org/occi/infrastructure#"
+                        "networkinterface{0}".format(link_id))
                     NET_LINK = core_model.Link(
                         net_str,
                         NETWORKINTERFACE, [IPNETWORKINTERFACE], resource,
@@ -281,58 +280,34 @@ class MyAPP(wsgi.Application):
                     snf_project = project['id']
                     print "Project found"
                     break
-        if ENABLE_VOMS:
-            compClient = ComputeClient(
-                config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
-            cyclClient = CycladesClient(
-                config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
-            netClient = CycladesNetworkClient(
-                config.KAMAKI['network_url'], environ['HTTP_AUTH_TOKEN'])
-            try:
-                # Up-to-date flavors and images
-                self.refresh_images(compClient, cyclClient)
-                self.refresh_flavors(compClient, cyclClient)
-                self.refresh_network_instances(netClient)
-                self.refresh_compute_instances(compClient, cyclClient)
-                # token will be represented in self.extras
-                return self._call_occi(
-                    environ, response,
-                    security=None, token=environ['HTTP_AUTH_TOKEN'],
-                    snf=compClient, client=cyclClient,
-                    snf_network=netClient, snf_project=snf_project)
-            except HTTPError:
-                print "Exception from unauthorized access!"
-                status = '401 Not Authorized'
-                headers = [
-                    ('Content-Type', 'text/html'),
-                    (
-                        'Www-Authenticate',
-                        'Keystone uri=\'{0}\''.format(KEYSTONE_URL))]
-                response(status, headers)
-            print '401 - give caller this URL: {0}'.format(KEYSTONE_URL)
-            return [str(response)]
-        else:
-            print 'I have a token and a project, we can proceed'
-            compClient = ComputeClient(
-                config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
-            cyclClient = CycladesClient(
-                config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
-            netClient = CycladesNetworkClient(
-                config.KAMAKI['network_url'], environ['HTTP_AUTH_TOKEN'])
 
+        compClient = CycladesComputeClient(
+            config.KAMAKI['compute_url'], environ['HTTP_AUTH_TOKEN'])
+        netClient = CycladesNetworkClient(
+            config.KAMAKI['network_url'], environ['HTTP_AUTH_TOKEN'])
+        try:
             # Up-to-date flavors and images
-            self.refresh_images(compClient, cyclClient)
-
-            self.refresh_flavors(compClient, cyclClient)
-            self.refresh_network_instances(cyclClient)
-            self.refresh_compute_instances(compClient, cyclClient)
-
+            self.refresh_images(compClient)
+            self.refresh_flavors(compClient)
+            self.refresh_network_instances(netClient)
+            self.refresh_compute_instances(compClient)
             # token will be represented in self.extras
             return self._call_occi(
                 environ, response,
                 security=None, token=environ['HTTP_AUTH_TOKEN'],
-                snf=compClient, client=cyclClient, snf_network=netClient,
+                snf_compute=compClient, snf_network=netClient,
                 snf_project=snf_project)
+        except HTTPError:
+            print "Exception from unauthorized access!"
+            status = '401 Not Authorized'
+            headers = [
+                ('Content-Type', 'text/html'),
+                (
+                    'Www-Authenticate',
+                    'Keystone uri=\'{0}\''.format(KEYSTONE_URL))]
+            response(status, headers)
+        print '401 - give caller this URL: {0}'.format(KEYSTONE_URL)
+        return [str(response)]
 
 
 def occify_terms(term):
