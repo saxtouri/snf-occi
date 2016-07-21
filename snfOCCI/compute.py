@@ -144,7 +144,7 @@ class ComputeBackend(MyBackend):
         else:
             if entity.attributes['occi.compute.state'] == 'inactive':
                 entity.actions = [infrastructure.START]
-            if entity.attributes['occi.compute.state'] == 'active': 
+            if entity.attributes['occi.compute.state'] == 'active':
                 entity.actions = [
                     infrastructure.STOP,
                     infrastructure.SUSPEND,
@@ -157,7 +157,7 @@ class ComputeBackend(MyBackend):
         snf.delete_server(vm_id)
         print "Deleting VM" + str(vm_id)
 
-    def get_vm_actions(self, entity , vm_state):
+    def get_vm_actions(self, entity, vm_state):
         actions = []
         status_dict = dict(
             ACTIVE='active', STOPPED='inactive', REBOOT='inactive',
