@@ -104,22 +104,18 @@ By now we have considered implementing only the **Compute** backend of the OCCI 
 
 Installation
 -------------
-First, you need to install the required dependencies which can be found here:
+Install **snf-occi** API translation server by cloning our latest source code:
 
-* `pyssf <https://code.grnet.gr/attachments/download/1182/pyssf-0.4.5.tar>`_
-* `kamaki <https://code.grnet.gr/projects/kamaki>`_  
+::
 
-Then you can install **snf-occi** API translation server by cloning our latest source code:
+  git clone https://github.com/grnet/snf-occi
+  cd snf-occi
+  cp snfOCCI/config.py.template snfOCCI/config.py
+  python setup.py install
 
-* `snf-occi <https://code.grnet.gr/projects/snf-occi>`_ 
+**NOTE**: edit the **config.py** before running the service
 
-**NOTE**: Before running setup.py you have to edit the **config.py** setting up:
-
-* API Server port
-* VM hostname naming pattern (FQDN providing the id of each compute resource)
-* VM core architecture
-
-Finally you can start the API translation server by running **snf-occi**
+snf-occi is a simple WSGI python application with basic paste support. A full scale deployment is out of the scope of this document, but it is expected to use standard tools like apache and gunicorn to setup the service.
 
 Examples:
 ---------
@@ -155,6 +151,18 @@ For the examples below we assume server is running on localhost (port 8888) and 
 
 Testing
 -------
+Here is how to run a local paste server. This is useful only for experimenting
+and development and should not be used in production.
+
+::
+
+  sudo apt-get install python-pastedeploy
+  cp snfOCCI/paste_deploy/test-server.py .
+  python test-server.py
+    server is running on 127.0.0.1:8080
+
+Follow the test/README.md instructions to setup a client e.g., with docker, and
+test the application with the prepared queries or the examples bellow.
 
 A smart way to test the application is by using the `egifedcloud/fedcloud-userinterface`. Make sure you have valid and authorized proxy certificates in your ${HOME}/.globus directory, and then start a cointainer shell loaded with all necessary client tools. E.g., to perform a "list servers" operation:
 
