@@ -13,7 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# snf_voms authentication PasteDeploy configuration file
+from paste import deploy
+from snfOCCI.config import PASTEDEPLOY
+import logging
 
-[composite:main]
-use = egg:Paste#urlmap
+LOG = logging.getLogger(__name__)
+
+# NOTE(ldbragst): 'application' is required in this context by WSGI spec.
+# The following is a reference to Python Paste Deploy documentation
+# http://pythonpaste.org/deploy/
+application = deploy.loadapp('config:{0}'.format(PASTEDEPLOY))

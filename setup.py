@@ -26,4 +26,5 @@ setup(
         [paste.app_factory]
         snf_occi_app = snfOCCI:main
         ''',
+    install_requires=['kamaki', 'pyssf', 'pyyaml', 'WebOb']
 )

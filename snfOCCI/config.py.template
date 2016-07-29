@@ -10,15 +10,6 @@ KAMAKI = {
     'network_url': 'https://cyclades.example.com/network/v2.0'
 }
 
-VOMS_CONFIG = {
-    'enable_voms': 'True',
-    'voms_policy': '/etc/snf/voms.json',
-    'vomsdir_path': '/etc/grid-security/vomsdir/',
-    'ca_path': '/etc/grid-security/certificates/',
-    'cert_dir': '/etc/ssl/certs/',
-    'key_dir': '/etc/ssl/private/',
-    'token': 'synnefo token'
-}
-
 KEYSTONE_URL = 'https://okeanos-astavoms.example.com'
 HOSTNAME = 'https://this-host.example.com'
+PASTEDEPLOY = '/home/user/snf-occi/snfOCCI/paste_deploy/snf-occi-paste.ini'

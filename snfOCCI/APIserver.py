@@ -18,7 +18,7 @@ import uuid
 from snfOCCI.registry import snfRegistry
 from snfOCCI.compute import ComputeBackend, SNFBackend
 from snfOCCI import config
-from snfOCCI.config import VOMS_CONFIG, KEYSTONE_URL
+from snfOCCI.config import KEYSTONE_URL
 from snfOCCI.network import (
     NetworkBackend, IpNetworkBackend, IpNetworkInterfaceBackend,
     NetworkInterfaceBackend)
@@ -47,8 +47,7 @@ class MyAPP(wsgi.Application):
 
     def __init__(self):
         """Initialization of the WSGI OCCI application for synnefo"""
-        global ENABLE_VOMS, VOMS_DB
-        ENABLE_VOMS = VOMS_CONFIG['enable_voms']
+        global VOMS_DB
         super(MyAPP, self).__init__(registry=snfRegistry())
         self._register_backends()
         VALIDATOR_APP = validator(self)
