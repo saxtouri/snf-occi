@@ -26,7 +26,7 @@ from kamaki.clients.cyclades import CycladesNetworkClient
 from snfOCCI.extensions import snf_addons
 
 from kamaki.clients.cyclades import CycladesComputeClient
-from kamaki.clients import astakos
+from kamaki.clients.astakos import AstakosClient
 from kamaki.clients import ClientError
 
 from occi.core_model import Mixin, Resource
@@ -268,15 +268,15 @@ class MyAPP(wsgi.Application):
             snf_project = req.environ['HTTP_X_SNF_PROJECT']
         except KeyError:
             print "No project provided, go to plan B"
-            astakosClient = astakos.AstakosClient(
+            astakos = AstakosClient(
                 config.KAMAKI['astakos_url'], environ['HTTP_AUTH_TOKEN'])
-            projects = astakosClient.get_projects()
-            user_info = astakosClient.authenticate()
+            user_info = astakos.authenticate()
+            projects = user_info['access']['user']['projects']
             user_uuid = user_info['access']['user']['id']
-            snf_project = '6d9ec935-fcd4-4ae1-a3a0-10e612c4f867'
+            snf_project = user_uuid
             for project in projects:
-                if project['id'] != user_uuid:
-                    snf_project = project['id']
+                if project != user_uuid:
+                    snf_project = project
                     print "Project found"
                     break
 
