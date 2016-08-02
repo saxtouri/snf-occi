@@ -96,6 +96,8 @@ class ComputeBackend(MyBackend):
                         print '{ce}, create an IP and retry'.format(ce=ce)
                         snf_network.create_floatingip(
                             project_id=kwargs.get('project_id'))
+                        info = snf_compute.create_server(
+                            vm_name, flavor_id, image_id, **kwargs)
                     else:
                         raise ce
 
