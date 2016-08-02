@@ -94,7 +94,8 @@ class ComputeBackend(MyBackend):
                 except ClientError as ce:
                     if ce.status in (409, ):
                         print '{ce}, create an IP and retry'.format(ce=ce)
-                        snf_network.create_floatingip(**kwargs)
+                        snf_network.create_floatingip(
+                            project_id=kwargs.get('project_id'))
                     else:
                         raise ce
 
