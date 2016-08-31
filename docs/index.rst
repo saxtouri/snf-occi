@@ -113,7 +113,27 @@ Install **snf-occi** API translation server by cloning our latest source code:
   cp snfOCCI/config.py.template snfOCCI/config.py
   python setup.py install
 
-**NOTE**: edit the **config.py** before running the service
+**NOTE**: edit the **config.py** before running the service. In the following
+example, we replicate the settings of the hellasgrid service, but you can set
+your own cloud and astavoms settings in your own deployment
+
+::
+
+  #  Copy this file as config.py and fill in the appropriate values
+  
+  COMPUTE = {
+    'arch': 'x86',
+  }
+  
+  KAMAKI = {
+    'compute_url': 'https://cyclades.okeanos.grnet.gr/compute/v2.0/',
+    'astakos_url': 'https://accounts.okeanos.grnet.gr/identity/v2.0',
+    'network_url': 'https://cyclades.okeanos.grnet.gr/network/v2.0'
+  }
+  
+  KEYSTONE_URL = 'https://okeanos-astavoms.hellasgrid.gr'
+  HOSTNAME = 'https://okeanos-occi2.hellasgrid.gr:9000'
+  PASTEDEPLOY = '/home/user/src/snf-occi/snfOCCI/paste_deploy/snf-occi-paste.ini'
 
 snf-occi is a simple WSGI python application with basic paste support. A full scale deployment is out of the scope of this document, but it is expected to use standard tools like apache and gunicorn to setup the service.
 
@@ -152,23 +172,27 @@ For the examples below we assume server is running on localhost (port 8888) and 
 Testing
 -------
 Here is how to run a local paste server. This is useful only for experimenting
-and development and should not be used in production.
+and development and should not be used in production. We suggest to run this
+test in a sandboxed environment e.g., virtualenv
 
 ::
 
-  sudo apt-get install python-pastedeploy
+  virtualenv mytest
+  source mytest/bin/activate
+  pip install Paste PasteDeploy
   cp snfOCCI/paste_deploy/test-server.py .
   python test-server.py
     server is running on 127.0.0.1:8080
 
 Follow the test/README.md instructions to setup a client e.g., with docker, and
-test the application with the prepared queries or the examples bellow.
+test the application with the prepared queries or the examples of the current
+document.
 
 A smart way to test the application is by using the `egifedcloud/fedcloud-userinterface`. Make sure you have valid and authorized proxy certificates in your ${HOME}/.globus directory, and then start a cointainer shell loaded with all necessary client tools. E.g., to perform a "list servers" operation:
 
   ::
 
-    $ docker run -v /home/saxtouri/.globus:/root/.globus -it egifedcloud/fedcloud-userinterface /bin/bash
+    $ docker run -v /home/user/.globus:/root/.globus -it egifedcloud/fedcloud-userinterface /bin/bash
     # fetch-crl -p 20
     # voms-proxy-init --voms fedcloud.egi.eu -rfc
       Your proxy is stored at /tmp/x509up_u0
