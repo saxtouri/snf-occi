@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2016 GRNET S.A.
+# Copyright (C) 2016 GRNET S.A.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,18 +13,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from setuptools import setup
+from ooi.wsgi import OCCIMiddleware
+from ooi.api.helpers import OpenStackHelper
 
-setup(
-    name='snf-occi',
-    version='0.4',
-    description='OCCI to Openstack/Cyclades API bridge',
-    url='http://code.grnet.gr/projects/snf-occi',
-    license='GPLv3',
-    packages=['soi', ],
-    entry_points='''
-        [paste.app_factory]
-        snf_occi_app=soi:main
-        ''',
-    install_requires=['kamaki', 'ooi', ]
-)
+
+def snf_index(cls, req):
+    """Synnefo-compliant method"""
+    req.environ['service_type'] = 'compute'
+    req.environ['method_name'] = 'servers_get'
+    response = req.get_response(cls.app)
+    return cls.get_from_response(response, "servers", [])
+
+
+OpenStackHelper.index = snf_index
+
+
+class SNFOCCIMiddleware(OCCIMiddleware):
+    """Synnefo wrapper for OCCIMiddleware"""
