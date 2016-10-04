@@ -25,20 +25,19 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# from ooi.wsgi import OCCIMiddleware
+# from paste import httpserver
 from soi.log import reveale_me
 import json
-from kamaki.clients.astakos import AstakosClient, CachedAstakosClient
+from kamaki.clients.astakos import AstakosClient
 from kamaki.clients.cyclades import CycladesComputeClient
 from kamaki.clients.utils import https
+from soi.config import AUTH_URL, CA_CERTS
 
-
-#  Constants and classes for kamaki/synnefo calls
-AUTH_URL = 'https://accounts.okeanos.grnet.gr/identity/v2.0'
-ADMIN_TOKEN = 'some-token'
-CA_CERTS = '/etc/ssl/certs/ca-certificates.crt'
-
+#  endpoints are offered auth-free, so no need for an admin token
+ADMIN_TOKEN = ''
 https.patch_with_certs(CA_CERTS)
-auth = CachedAstakosClient(AUTH_URL, ADMIN_TOKEN)
+auth = AstakosClient(AUTH_URL, ADMIN_TOKEN)
 
 endpoints, client_classes = {}, {}
 for cls in (AstakosClient, CycladesComputeClient):
@@ -91,3 +90,8 @@ def _stringify_json_values(data):
     if isinstance(data, list):
         return map(_stringify_json_values, data)
     return '{0}'.format(data) if data else data
+
+
+#  Set up OOI and run it
+# factory = OCCIMiddleware.factory({'openstack_version': 'v2.1', })
+# httpserver.serve(factory(call_kamaki))

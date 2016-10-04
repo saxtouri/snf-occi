@@ -12,31 +12,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-This it the entry point for paste deploy .
 
-Paste config file needs to point to egg:<package name>:<entrypoint name>:
+from paste import deploy
+import logging
+from paste import httpserver
+from soi.config import PASTE_INI, HOST, PORT
 
-use = egg:snfOCCI#sample_app
+LOG = logging.getLogger(__name__)
 
-sample_app entry point is defined in setup.py:
-
-entry_points='''
-[paste.app_factory]
-sample_app = soi:main
-''',
-
-which point to this function call (<module name>:function).
-"""
-
-from soi import wsgi
-from soi import synnefo
-
-# W0613:unused args
-# pylint: disable=W0613
-
-
-def main(global_config, **settings):
-    """This is the entry point for paste into the Synnefo OCCI Interface"""
-    factory = wsgi.SNFOCCIMiddleware.factory({})
-    return factory(synnefo.call_kamaki)
+# Setup a server for testing
+application = deploy.loadapp('config:{0}'.format(PASTE_INI))
+httpserver.serve(application, HOST, PORT)

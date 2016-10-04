@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2016 GRNET S.A.
+# Copyright (C) 2016 GRNET S.A.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,20 +11,14 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# along with this program. If not, see <http://www.gnu.org/licenses/>
 
-from setuptools import setup
+#  Copy this file as config.py and fill in the appropriate values
 
-setup(
-    name='snf-occi',
-    version='0.3',
-    description='OCCI to Openstack/Cyclades API bridge',
-    url='http://code.grnet.gr/projects/snf-occi',
-    license='GPLv3',
-    packages=['soi', ],
-    entry_points='''
-        [paste.app_factory]
-        snf_occi_app=soi:main
-        ''',
-    install_requires=['kamaki', 'ooi', ]
-)
+AUTH_URL = 'https://accounts.example.com/identity/v2.0'
+CA_CERTS = '/etc/ssl/certs/ca-certificates.crt'
+KEYSTONE_URL = 'https://okeanos-astavoms.example.com'
+
+HOST = 'this-host.example.com or IP'
+PORT = '8080'
+PASTE_INI = '/home/user/snf-occi/paste_deploy/soi.ini'

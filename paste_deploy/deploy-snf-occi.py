@@ -13,18 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from setuptools import setup
+from paste import deploy
+import logging
+from soi.config immport PASTE_INI
 
-setup(
-    name='snf-occi',
-    version='0.3',
-    description='OCCI to Openstack/Cyclades API bridge',
-    url='http://code.grnet.gr/projects/snf-occi',
-    license='GPLv3',
-    packages=['soi', ],
-    entry_points='''
-        [paste.app_factory]
-        snf_occi_app=soi:main
-        ''',
-    install_requires=['kamaki', 'ooi', ]
-)
+LOG = logging.getLogger(__name__)
+
+# NOTE(ldbragst): 'application' is required in this context by WSGI spec.
+# The following is a reference to Python Paste Deploy documentation
+# http://pythonpaste.org/deploy/
+application = deploy.loadapp('config:{0}'.format(PASTE_INI))

@@ -1,27 +1,30 @@
 snf-occi
 ========
-snf-occi 0.2 implements the OCCI 1.1 procotol for Synnefo clouds. Since version
+snf-occi 0.3 implements the OCCI 1.1 protocol for Synnefo clouds. Since version
 0.2, authentication is performed by an external keystone-compatible service,
-like Astavoms.
+like "Astavoms". The major change is the abandonment of "snfOCCI" in favor of "OOI".
+
+"OOI" is the Openstack OCCI Interface. It is used in snf-occi, wrapped by the newly introduced "SOI" package (Synnefo OCCI Interface). "SOI" is responsible for patching "OOI" so that it is compatible with Synnefo API.
 
 Installation
 -------------
-First, you need to install the required dependencies which can be found here:
+Clone snf-occi:
 
-* `pyssf <https://code.grnet.gr/attachments/download/1182/pyssf-0.4.5.tar>`_
-* `kamaki <https://code.grnet.gr/projects/kamaki>`_  
+$ git clone https://github.com/grnet/snf-occi
 
-Then you can install **snf-occi** API translation server by cloning our latest source code:
+Create file config.py and edit it with the correct settings:
 
-* `snf-occi <https://code.grnet.gr/projects/snf-occi>`_ 
+$ cd snf-occi
+$ cp soi/config.py.template soi/config.py
+$ <your favorite editor> soi/config.py
 
-**NOTE**: Before running setup.py you have to edit the **config.py** setting up:
+**Note** make sure you have a config.py file before installing snf-occi. You don't need to put the correct settings yet, though. They can wait until deployment.
 
-* API Server port
-* VM hostname naming pattern (FQDN providing the id of each compute resource)
-* VM core architecture
+Install the application (dependences are installed automatically) :
 
-Finally you can start the API translation server by running **snf-occi**
+$ python setup.py install
+
+Finally you can start the API translation server with paste. We have provided a demonstration server for testing and development at "paste_deploy/test_server.py" but you should not use it for production.
 
 More
 ----
