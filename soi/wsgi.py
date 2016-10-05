@@ -45,9 +45,18 @@ def snf_get_images(cls, req):
     return cls.get_from_response(response, 'images', [])
 
 
+def snf_empty_list_200(cls, req):
+    """return OK 200 and empty list"""
+    req.environ['service_type'] = 'compute'
+    req.environ['method_name'] = 'servers_get'
+    response = req.get_response(cls.app)
+    return cls.get_from_response(response, 'return_empty_list', [])
+
+
 OpenStackHelper.index = snf_index
 OpenStackHelper.get_flavors = snf_get_flavors
 OpenStackHelper.get_images = snf_get_images
+OpenStackHelper.get_floating_ip_pools = snf_empty_list_200
 
 
 class SNFOCCIMiddleware(OCCIMiddleware):
