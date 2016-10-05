@@ -20,14 +20,32 @@ from soi.synnefo import AstakosClient, AUTH_URL
 
 
 def snf_index(cls, req):
-    """Synnefo-compliant method"""
+    """Synnefo: list servers"""
     req.environ['service_type'] = 'compute'
     req.environ['method_name'] = 'servers_get'
     response = req.get_response(cls.app)
     return cls.get_from_response(response, "servers", [])
 
 
+def snf_get_flavors(cls, req):
+    """Synnefo: list flavors"""
+    req.environ['service_type'] = 'compute'
+    req.environ['method_name'] = 'flavors_get'
+    req.environ['kwargs'] = {'detail': True}
+    response = req.get_response(cls.app)
+    return cls.get_from_response(response, 'flavors', [])
+
+
 OpenStackHelper.index = snf_index
+OpenStackHelper.get_flavors = snf_get_flavors
+
+
+#  Test ground
+
+from soi.log import reveale_cme
+
+
+#  end test ground
 
 
 class SNFOCCIMiddleware(OCCIMiddleware):
@@ -35,9 +53,6 @@ class SNFOCCIMiddleware(OCCIMiddleware):
 
     def __call__(self, environ, response, *args, **kwargs):
         """Check request for essential AUTH-related headers, early"""
-
-        print environ
-
         if 'HTTP_X_AUTH_TOKEN' not in environ:
             print "No token provided, redirect to Astavoms"
             status = '401 Not Authorized'
