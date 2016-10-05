@@ -36,16 +36,18 @@ def snf_get_flavors(cls, req):
     return cls.get_from_response(response, 'flavors', [])
 
 
+def snf_get_images(cls, req):
+    """Synnefo: list images"""
+    req.environ['service_type'] = 'compute'
+    req.environ['method_name'] = 'images_get'
+    req.environ['kwargs'] = {'detail': True}
+    response = req.get_response(cls.app)
+    return cls.get_from_response(response, 'images', [])
+
+
 OpenStackHelper.index = snf_index
 OpenStackHelper.get_flavors = snf_get_flavors
-
-
-#  Test ground
-
-from soi.log import reveale_cme
-
-
-#  end test ground
+OpenStackHelper.get_images = snf_get_images
 
 
 class SNFOCCIMiddleware(OCCIMiddleware):

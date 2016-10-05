@@ -30,7 +30,8 @@
 from soi.log import reveale_me
 import json
 from kamaki.clients.astakos import AstakosClient
-from kamaki.clients.cyclades import CycladesComputeClient
+from kamaki.clients.cyclades import (
+    CycladesComputeClient, CycladesNetworkClient)
 from kamaki.clients.utils import https
 from soi.config import AUTH_URL, CA_CERTS
 
@@ -39,9 +40,11 @@ ADMIN_TOKEN = ''
 https.patch_with_certs(CA_CERTS)
 auth = AstakosClient(AUTH_URL, ADMIN_TOKEN)
 
-endpoints, client_classes = {}, {}
-for cls in (AstakosClient, CycladesComputeClient):
-    service_type = CycladesComputeClient.service_type
+endpoints = {'identity': AUTH_URL}
+client_classes = {'identity': AstakosClient}
+
+for cls in (CycladesComputeClient, CycladesNetworkClient):
+    service_type = cls.service_type
     endpoints[service_type] = auth.get_endpoint_url(service_type)
     client_classes[service_type] = cls
 
@@ -58,6 +61,8 @@ def call_kamaki(environ, start_response, *args, **kwargs):
     service_type = environ.pop('service_type')
     method_name = environ.pop('method_name')
     kwargs = environ.pop('kwargs', {})
+
+    print '\t', service_type, method_name, kwargs
 
     endpoint = endpoints[service_type]
     token = environ['HTTP_X_AUTH_TOKEN']
