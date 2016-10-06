@@ -25,15 +25,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# from ooi.wsgi import OCCIMiddleware
-# from paste import httpserver
-from soi.log import reveale_me
 import json
+from kamaki.clients import ClientError
 from kamaki.clients.astakos import AstakosClient
 from kamaki.clients.cyclades import (
     CycladesComputeClient, CycladesNetworkClient)
 from kamaki.clients.utils import https
 from soi.config import AUTH_URL, CA_CERTS
+import webob.exc
 
 #  endpoints are offered auth-free, so no need for an admin token
 ADMIN_TOKEN = ''
@@ -49,7 +48,33 @@ for cls in (CycladesComputeClient, CycladesNetworkClient):
     client_classes[service_type] = cls
 
 
-@reveale_me
+def handle_exceptions(f):
+    """Run a method, raise Synnefo errors as snf-occi exceptions"""
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except ClientError as ce:
+            print 'ClientError:', ce, ce.status, ce.details
+            exc = {
+                400: webob.exc.HTTPBadRequest,
+                401: webob.exc.HTTPUnauthorized,
+                403: webob.exc.HTTPForbidden,
+                404: webob.exc.HTTPNotFound,
+                405: webob.exc.HTTPMethodNotAllowed,
+                406: webob.exc.HTTPNotAcceptable,
+                409: webob.exc.HTTPConflict,
+                413: webob.exc.HTTPRequestEntityTooLarge,
+                415: webob.exc.HTTPUnsupportedMediaType,
+                429: webob.exc.HTTPTooManyRequests,
+                501: webob.exc.HTTPNotImplemented,
+                503: webob.exc.HTTPServiceUnavailable,
+            }.get(ce.status, webob.exc.HTTPInternalServerError)
+            raise exc(explanation='{0}'.format(ce.message))
+    wrapper.__name__ = f.__name__
+    return wrapper
+
+
+@handle_exceptions
 def call_kamaki(environ, start_response, *args, **kwargs):
     """Initialize the requested kamaki client, call the requested method
     :param cls: the kamaki client Class, e.g, CycladesComputeClient

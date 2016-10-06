@@ -17,6 +17,7 @@ from ooi.wsgi import OCCIMiddleware
 from ooi.api.helpers import OpenStackHelper
 from soi.config import KEYSTONE_URL
 from soi.synnefo import AstakosClient, AUTH_URL
+from kamaki.clients import ClientError
 
 
 def snf_index(cls, req):
@@ -87,7 +88,19 @@ class SNFOCCIMiddleware(OCCIMiddleware):
         except KeyError:
             print "No project header, ask Astakos for project ID"
             snf_auth = AstakosClient(AUTH_URL, snf_token)
-            user_info = snf_auth.authenticate()
+
+            try:
+                user_info = snf_auth.authenticate()
+            except ClientError as ce:
+                print ce.status, ce, ce.details
+                status = '{0} {1}'.format(ce.status, ce)
+                headers = [
+                    ('Content-Type', 'application/json'),
+                    ('Content-Length', len(ce.details))
+                ]
+                response(status, headers)
+                return [ce.details, ]
+
             projects = user_info['access']['user']['projects']
             user_uuid = user_info['access']['user']['id']
             snf_project = user_uuid
