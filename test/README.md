@@ -54,6 +54,7 @@ For instance, if you have a proxy, you may want to run something like:
   $ docker run -v my_proxy:/data/my_proxy \
     -e OCCI_ENDPOINT="https://okeanos-occi2.hellasgrid.gr:9000" \
     -e USER_PROXY="/data/my_proxy" \
-    -e OS_TPL="debian_base" -e RESOURCE_TPL="c2r2048d20drbd" \
+    -e OS_TPL="6f1f7205-cf4c-4b8c-ae77-7c419747bcbd"\
+    -e RESOURCE_TPL="13"\
     -ti snf-occi-client:latest
 

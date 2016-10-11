@@ -68,9 +68,16 @@ eval $CMD
 echo
 
 if [ -z "$VM_URL" ]; then
-    echo "Frankly, I don't know what servers to delete";
+    echo "Frankly, I don't know what servers to describe or delete";
 else
     SUFFIX=(`echo ${VM_URL}|awk '{n=split($0,a,"/"); print "/"a[n-1]"/"a[n]}'`)
+
+    echo "Details on server instance ${SUFFIX}";
+    echo "Meaning: kamaki server info ${SERVER_URL}";
+    CMD="${BASE_CMD} --action describe --resource ${SUFFIX}";
+    echo "$CMD";
+    eval $CMD;
+
     echo "Destroy server instance ${SUFFIX}";
     echo "Meaning: kamaki server delete ${SERVER_URL}";
     CMD="${BASE_CMD} --action delete --resource ${SUFFIX}";
