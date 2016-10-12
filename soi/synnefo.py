@@ -86,42 +86,37 @@ def call_kamaki(environ, start_response, *args, **kwargs):
     service_type = environ.pop('service_type')
     method_name = environ.pop('method_name')
     kwargs = environ.pop('kwargs', {})
-
     print '\t', service_type, method_name, kwargs
 
-    endpoint = endpoints[service_type]
-    token = environ['HTTP_X_AUTH_TOKEN']
-    cls = client_classes[service_type]
-    client = cls(endpoint, token)
-    method = getattr(client, method_name)
+    if service_type in ('mock', ):
+        code, status, headers, body = {
+            'empty_list': (200, 'OK', {}, {'empty list': []}),
+        }.get(method_name, kwargs.get('req_args', (200, 'OK', {}, None)))
 
-    r = method(*args, **kwargs)
+    else:  # Normal case
+        endpoint = endpoints[service_type]
+        token = environ['HTTP_X_AUTH_TOKEN']
+        cls = client_classes[service_type]
+        client = cls(endpoint, token)
+        method = getattr(client, method_name)
 
-    body = _stringify_json_values(r.json)
-    bodystr = json.dumps(body)
+        r = method(*args, **kwargs)
+        code, status, headers = r.status_code, r.status, r.headers
+        body = _stringify_json_values(r.json)
 
-    headers, key = r.headers, 'content-length'
-    if key in headers:
-        headers[key] = '{0}'.format(len(bodystr))
+    if body is not None:
+        bodystr = json.dumps(body)
+        headers['content-length'] = '{0}'.format(len(bodystr))
+        headers.setdefault('content-type', 'application/json')
 
-    start_response('{0} {1}'.format(r.status_code, r.status), headers.items())
+    start_response('{0} {1}'.format(code, status), headers.items())
     return bodystr
 
 
 def _stringify_json_values(data):
     """If a sinlge value is not a string, make it"""
     if isinstance(data, dict):
-        return dict(
-            map(lambda (k, v): (k, _stringify_json_values(v)), data.items()))
-        # new_d = dict(data)
-        # for k, v in data.items():
-        #     new_d[k] = _stringify_json_values(v)
-        # return new_d
+        return dict((k, _stringify_json_values(v)) for k, v in data.items())
     if isinstance(data, list):
         return map(_stringify_json_values, data)
     return '{0}'.format(data) if data else data
-
-
-#  Set up OOI and run it
-# factory = OCCIMiddleware.factory({'openstack_version': 'v2.1', })
-# httpserver.serve(factory(call_kamaki))

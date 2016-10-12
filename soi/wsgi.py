@@ -17,47 +17,11 @@ from ooi.wsgi import OCCIMiddleware
 from ooi.api.helpers import OpenStackHelper
 from soi.config import KEYSTONE_URL
 from soi.synnefo import AstakosClient, AUTH_URL
+from soi import utils, compute
 from kamaki.clients import ClientError
 
 
-def snf_index(cls, req):
-    """Synnefo: list servers"""
-    req.environ['service_type'] = 'compute'
-    req.environ['method_name'] = 'servers_get'
-    response = req.get_response(cls.app)
-    return cls.get_from_response(response, "servers", [])
-
-
-def snf_get_flavors(cls, req):
-    """Synnefo: list flavors"""
-    req.environ['service_type'] = 'compute'
-    req.environ['method_name'] = 'flavors_get'
-    req.environ['kwargs'] = {'detail': True}
-    response = req.get_response(cls.app)
-    return cls.get_from_response(response, 'flavors', [])
-
-
-def snf_get_images(cls, req):
-    """Synnefo: list images"""
-    req.environ['service_type'] = 'compute'
-    req.environ['method_name'] = 'images_get'
-    req.environ['kwargs'] = {'detail': True}
-    response = req.get_response(cls.app)
-    return cls.get_from_response(response, 'images', [])
-
-
-def snf_empty_list_200(cls, req):
-    """return OK 200 and empty list"""
-    req.environ['service_type'] = 'compute'
-    req.environ['method_name'] = 'servers_get'
-    response = req.get_response(cls.app)
-    return cls.get_from_response(response, 'return_empty_list', [])
-
-
-OpenStackHelper.index = snf_index
-OpenStackHelper.get_flavors = snf_get_flavors
-OpenStackHelper.get_images = snf_get_images
-OpenStackHelper.get_floating_ip_pools = snf_empty_list_200
+utils.patch_class_methods(OpenStackHelper, compute.function_map)
 
 
 class SNFOCCIMiddleware(OCCIMiddleware):
