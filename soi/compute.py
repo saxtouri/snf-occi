@@ -120,7 +120,8 @@ def snf_create_server(cls, req, name, image, flavor, **kwargs):
     req.environ['service_type'] = 'compute'
     req.environ['method_name'] = 'servers_post'
 
-    body = dict(name=name, imageRef=image, flavorRef=flavor)
+    project = req.environ.get('HTTP_X_PROJECT_ID', None)
+    body = dict(name=name, imageRef=image, flavorRef=flavor, project=project)
     body.update(kwargs)
     req.environ['kwargs'] = dict(json_data=dict(server=body))
 
