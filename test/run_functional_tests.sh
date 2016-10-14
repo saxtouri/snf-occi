@@ -74,9 +74,23 @@ else
 
     echo "Details on server instance ${SUFFIX}";
     echo "Meaning: kamaki server info ${SERVER_URL}";
-    CMD="${BASE_CMD} --action describe --resource ${SUFFIX}";
+    CMD="${BASE_CMD} --action describe --resource ${SUFFIX} > vm.info";
     echo "$CMD";
     eval $CMD;
+    STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`)
+
+    WAIT=1;
+    while [ $STATE != 'active' ]
+    do
+        echo "Server state is ${STATE}"
+        echo "wait ${WAIT}\" and check again"
+        sleep $WAIT;
+        let "WAIT++";
+        echo "$CMD";
+        eval $CMD;
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`);
+    done;
+    cat vm.info;
 
     echo "Destroy server instance ${SUFFIX}";
     echo "Meaning: kamaki server delete ${SERVER_URL}";
