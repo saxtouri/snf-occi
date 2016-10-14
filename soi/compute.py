@@ -115,12 +115,28 @@ def snf_get_server_net_attachments(cls, req, compute_id):
     return r
 
 
+def snf_create_server(cls, req, name, image, flavor, **kwargs):
+    """Synnefo: create a new VM"""
+    req.environ['service_type'] = 'compute'
+    req.environ['method_name'] = 'servers_post'
+
+    body = dict(name=name, imageRef=image, flavorRef=flavor)
+    body.update(kwargs)
+    req.environ['kwargs'] = dict(json_data=dict(server=body))
+
+    response = req.get_response(cls.app)
+    r = cls.get_from_response(response, 'server', {})
+    _openstackify_addresses(r['addresses'], r['attachments'])
+    return r
+
+
 def snf_delete_server(cls, req, server_id):
     print 'Deleting VM with id:' + str(server_id)
     req.environ['service_type'] = 'compute'
     req.environ['method_name'] = 'servers_delete'
     req.environ['kwargs'] = {'server_id': server_id}
     req.get_response(cls.app)
+
 
 function_map = {
     'index': snf_index,
@@ -132,5 +148,6 @@ function_map = {
     'get_floating_ip_pools': empty_list_200,
     'get_server_volumes_link': snf_get_server_volumes_link,
     '_get_ports': snf_get_server_net_attachments,
-    'delete': snf_delete_server
+    'delete': snf_delete_server,
+    'create_server': snf_create_server,
 }
