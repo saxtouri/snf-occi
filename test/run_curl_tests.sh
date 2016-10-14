@@ -26,6 +26,7 @@ CMD="${BASE_CMD} $OCCI_ENDPOINT/-/"
 echo "$CMD"
 eval $CMD
 echo
+echo
 
 echo "Create a server"
 echo "Meaning: kamaki server create --name \"My Test VM\" \\"
@@ -39,6 +40,8 @@ CMD="${BASE_CMD} -X'POST' $OCCI_ENDPOINT/compute \
 echo $CMD
 VM_URL=$(eval $CMD)
 VM_URL=(`echo $VM_URL|awk '{print $2;}'`)
+echo
+echo
 
 echo "List all servers"
 echo "Meaning: kamaki server list"
@@ -46,17 +49,37 @@ CMD="${BASE_CMD} $OCCI_ENDPOINT/compute"
 echo $CMD
 eval $CMD
 echo
+echo
 
 echo "Details on server"
 echo "Meaning: kamaki server info ${VM_URL}"
-CMD="${BASE_CMD} ${VM_URL}"
+CMD="${BASE_CMD} ${VM_URL} > vm.info"
 echo $CMD
 eval $CMD
 echo
+echo
+
+STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+WAIT=1;
+while [ $STATE != 'active' ]
+do
+    echo "Server state is ${STATE}"
+    echo "wait ${WAIT}\" and check again"
+    sleep $WAIT;
+    let "WAIT++";
+    echo "$CMD";
+    eval $CMD;
+    STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+done;
+cat vm.info;
+echo
+echo
+
 
 echo "Delete the server"
 echo "Meaning: kamaki server delete ${VM_URL}"
 CMD="${BASE_CMD} -X DELETE ${VM_URL}"
 echo $CMD
 eval $CMD
+echo
 echo
