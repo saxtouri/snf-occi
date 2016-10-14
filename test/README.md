@@ -35,15 +35,24 @@ If you already have a valid proxy, load it somewhere on the machine
 What is in the container
 ------------------------
 You will find all the tools from egifedcloud/fedcloud-userinterface:latest plus
-a shell script to test the snf-occi application.
+two shell script to test the snf-occi application.
 
-To run the script, you must set some variables, either when you RUN the
-container or while you are inside the container.
+To run the "run_functional_tests.sh" script, you must set some variables,
+either when you RUN the container or while you are inside the container.
 
 ::
 
   OCCI_ENDPOINT
   USER_PROXY
+  OS_TPL
+  RESOURCE_TPL
+
+For the "run_curl_tests.sh" you need a similar set of enviroment variables.
+
+::
+
+  OCCI_ENDPOINT
+  TOKEN
   OS_TPL
   RESOURCE_TPL
 
@@ -53,6 +62,7 @@ For instance, if you have a proxy, you may want to run something like:
 
   $ docker run -v my_proxy:/data/my_proxy \
     -e OCCI_ENDPOINT="https://okeanos-occi2.hellasgrid.gr:9000" \
+    -e TOKEN="My-Okeanos-Token"
     -e USER_PROXY="/data/my_proxy" \
     -e OS_TPL="6f1f7205-cf4c-4b8c-ae77-7c419747bcbd"\
     -e RESOURCE_TPL="13"\

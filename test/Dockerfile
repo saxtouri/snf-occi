@@ -1,12 +1,13 @@
 # Dockerfile for snf-occi-manual-ci
 # contains functional testing scripts
 #
-# VERSION   0.2
+# VERSION   0.3
 
 FROM egifedcloud/fedcloud-userinterface:latest
 MAINTAINER Stavros Sachtouris <saxtouri@grnet.gr>
-RUN apt update && apt install ca-policy-egi-core -y
+RUN apt update && apt install ca-policy-egi-core curl -y
 
 COPY run_functional_tests.sh /data/
+COPY run_curl_tests.sh /data/
 COPY run.sh /data/
 CMD ["/bin/bash", "/data/run.sh"]
