@@ -12,7 +12,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 from utils import empty_list_200
 
 
@@ -116,6 +115,13 @@ def snf_get_server_net_attachments(cls, req, compute_id):
     return r
 
 
+def snf_delete_server(cls, req, server_id):
+    print 'Deleting VM with id:' + str(server_id)
+    req.environ['service_type'] = 'compute'
+    req.environ['method_name'] = 'servers_delete'
+    req.environ['kwargs'] = {'server_id': server_id}
+    req.get_response(cls.app)
+
 function_map = {
     'index': snf_index,
     'get_server': snf_get_server,
@@ -126,4 +132,5 @@ function_map = {
     'get_floating_ip_pools': empty_list_200,
     'get_server_volumes_link': snf_get_server_volumes_link,
     '_get_ports': snf_get_server_net_attachments,
+    'delete': snf_delete_server
 }
