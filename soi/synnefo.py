@@ -102,8 +102,12 @@ def call_kamaki(environ, start_response, *args, **kwargs):
 
         r = method(*args, **kwargs)
         code, status, headers = r.status_code, r.status, r.headers
-        body = _stringify_json_values(r.json)
+        try:
+            body = _stringify_json_values(r.json)
+        except ClientError:
+            body = None
 
+    bodystr = ''
     if body is not None:
         bodystr = json.dumps(body)
         headers['content-length'] = '{0}'.format(len(bodystr))
