@@ -133,7 +133,7 @@ def snf_create_server(cls, req, name, image, flavor, **kwargs):
 
 
 def snf_delete_server(cls, req, server_id):
-    print 'Deleting VM with id {0}'.format(server_id)
+    """Synnefo: delete server"""
     req.environ['service_type'] = 'compute'
     req.environ['method_name'] = 'servers_delete'
     req.environ['kwargs'] = {'server_id': server_id}
@@ -141,7 +141,7 @@ def snf_delete_server(cls, req, server_id):
 
 
 def snf_run_action(cls, req, action, server_id):
-    print "Performing action {0} on VM with id {1}".format(action, server_id)
+    """Synnefo: server actions"""
 
     actions_map = {
         "stop": {"kwargs": {"server_id": server_id,
