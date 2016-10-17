@@ -75,6 +75,98 @@ cat vm.info;
 echo
 echo
 
+echo "STOP the server"
+echo "Meaning: kamaki server shutdown"
+ACTION="stop"
+ACT="${BASE_CMD} -X POST ${VM_URL}?action=${ACTION} -H 'Category: ${ACTION} ;\
+    scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'"
+echo "$CMD"
+eval $ACT
+echo "Check server state"
+echo $CMD
+eval $CMD
+STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+WAIT=1;
+while [ $STATE != 'inactive' ]
+do
+    echo "Server state is ${STATE}"
+    echo "wait ${WAIT}\" and check again"
+    sleep $WAIT;
+    let "WAIT++";
+    echo "$CMD";
+    eval $CMD;
+    STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+done;
+cat vm.info;
+echo
+echo
+
+echo "START the server"
+echo "Meaning: kamaki server start"
+ACTION="start"
+ACT="${BASE_CMD} -X POST ${VM_URL}?action=${ACTION} -H 'Category: ${ACTION} ;\
+    scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'"
+echo "$CMD"
+eval $ACT
+echo "Check server state"
+echo $CMD
+eval $CMD
+STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+WAIT=1;
+while [ $STATE != 'active' ]
+do
+    echo "Server state is ${STATE}"
+    echo "wait ${WAIT}\" and check again"
+    sleep $WAIT;
+    let "WAIT++";
+    echo "$CMD";
+    eval $CMD;
+    STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+done;
+cat vm.info;
+echo
+echo
+
+
+echo "RESTART the server"
+echo "Meaning: kamaki server restart"
+ACTION="restart"
+ACT="${BASE_CMD} -X POST ${VM_URL}?action=${ACTION} -H 'Category: ${ACTION} ;\
+    scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'"
+echo "$CMD"
+eval $ACT
+echo "Check server state"
+echo $CMD
+eval $CMD
+STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+WAIT=1;
+while [ $STATE != 'inactive' ]
+do
+    echo "Server state is ${STATE}"
+    echo "wait ${WAIT}\" and check again"
+    sleep $WAIT;
+    let "WAIT++";
+    echo "$CMD";
+    eval $CMD;
+    STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+done
+cat vm.info
+echo
+WAIT=1;
+while [ $STATE != 'active' ]
+do
+    echo "Server state is ${STATE}"
+    echo "wait ${WAIT}\" and check again"
+    sleep $WAIT;
+    let "WAIT++";
+    echo "$CMD";
+    eval $CMD;
+    STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' vm.info`)
+done;
+cat vm.info;
+echo
+echo
+
 
 echo "Delete the server"
 echo "Meaning: kamaki server delete ${VM_URL}"
