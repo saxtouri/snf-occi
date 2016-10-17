@@ -24,6 +24,9 @@ from kamaki.clients import ClientError
 utils.patch_class_methods(OpenStackHelper, compute.function_map)
 
 
+REDIRECT_MSG = '401 - redirect to: {URL}'
+
+
 class SNFOCCIMiddleware(OCCIMiddleware):
     """Synnefo wrapper for OCCIMiddleware"""
 
@@ -36,11 +39,13 @@ class SNFOCCIMiddleware(OCCIMiddleware):
                 ('Content-Type', 'text/html'),
                 (
                     'Www-Authenticate',
-                    'Keystone uri=\'{0}\''.format(KEYSTONE_URL))
+                    'Keystone uri=\'{0}\''.format(KEYSTONE_URL)
+                )
             ]
             response(status, headers)
-            print '401 - redirect to: {0}'.format(KEYSTONE_URL)
-            return [str(response)]
+            msg = REDIRECT_MSG.format(URL=KEYSTONE_URL)
+            print msg
+            return [msg]
 
         print 'Token provided'
         snf_token = environ['HTTP_X_AUTH_TOKEN']
