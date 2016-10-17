@@ -51,8 +51,8 @@ class SNFOCCIMiddleware(OCCIMiddleware):
         snf_token = environ['HTTP_X_AUTH_TOKEN']
 
         try:
-            snf_project = environ.get(
-                'HTTP_X_SNF_PROJECT', environ['HTTP_X_PROJECT_ID'])
+            snf_project = environ.get('HTTP_X_SNF_PROJECT') or environ[
+                'HTTP_X_PROJECT_ID']
             print 'Project ID provided'
         except KeyError:
             print "No project header, ask Astakos for project ID"
