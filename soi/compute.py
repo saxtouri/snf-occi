@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from utils import empty_list_200
+import webob.exc
 
 
 def snf_index(cls, req):
@@ -132,11 +133,40 @@ def snf_create_server(cls, req, name, image, flavor, **kwargs):
 
 
 def snf_delete_server(cls, req, server_id):
-    print 'Deleting VM with id:' + str(server_id)
+    print 'Deleting VM with id {0}'.format(server_id)
     req.environ['service_type'] = 'compute'
     req.environ['method_name'] = 'servers_delete'
     req.environ['kwargs'] = {'server_id': server_id}
     req.get_response(cls.app)
+
+
+def snf_run_action(cls, req, action, server_id):
+    print "Performing action {0} on VM with id {1}".format(action, server_id)
+
+    actions_map = {
+        "stop": {"kwargs": {"server_id": server_id,
+                            "json_data": {"shutdown": {}}
+                            }
+                 },
+
+        "start": {"kwargs": {"server_id": server_id,
+                             "json_data": {"start": {}}
+                             }
+                  },
+        "restart": {"kwargs": {"server_id": server_id,
+                               "json_data": {"reboot": {"type": "SOFT"}}
+                               }
+                    }
+    }
+    try:
+        action = actions_map[action]
+        req.environ['service_type'] = 'compute'
+        req.environ['method_name'] = 'servers_action_post'
+        req.environ.update(action)
+        req.get_response(cls.app)
+    except KeyError:
+        raise webob.exc.HTTPNotImplemented(
+            explanation='Action {0} not supported'.format(action))
 
 
 function_map = {
@@ -151,4 +181,5 @@ function_map = {
     '_get_ports': snf_get_server_net_attachments,
     'delete': snf_delete_server,
     'create_server': snf_create_server,
+    'run_action': snf_run_action,
 }
