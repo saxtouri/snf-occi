@@ -36,14 +36,14 @@ eval $CMD
 echo
 
 echo "Details on OS template"
-echo "Meaning: kamaki image info <ID of ${OS_TPL} image>"
+echo "Meaning: kamaki image info ${OS_TPL}"
 CMD="${BASE_CMD} --action describe --resource os_tpl#${OS_TPL}"
 echo "$CMD"
 eval $CMD
 echo
 
 echo "Details on resource template"
-echo "Meaning: kamaki flavor info <FLAVOR ID of ${RESOURCE_TPL}>"
+echo "Meaning: kamaki flavor info ${RESOURCE_TPL}"
 CMD="${BASE_CMD} --action describe --resource resource_tpl#${RESOURCE_TPL}"
 echo "$CMD"
 eval $CMD
@@ -91,6 +91,54 @@ else
         STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`);
     done;
     cat vm.info;
+
+    echo "STOP server"
+    echo "Meaning: kamaki server shutdown ${SERVER_URL}"
+    ACTION="stop"
+    ACMD="${BASE_CMD} --resource ${SUFFIX} --action trigger --trigger-action ${ACTION}"
+    echo "$ACMD"
+    eval $ACMD
+    WAIT=1;
+    while [ $STATE != 'inactive' ]
+    do
+        echo "Server state is ${STATE}"
+        echo "wait ${WAIT}\" and check again"
+        sleep $WAIT;
+        let "WAIT++";
+        echo "$CMD";
+        eval $CMD;
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`);
+    done;
+    echo "Server state is $STATE"
+    echo
+
+    echo "START server"
+    echo "Meaning: kamaki server start ${SERVER_URL}"
+    ACTION="start"
+    ACMD="${BASE_CMD} --resource ${SUFFIX} --action trigger --trigger-action ${ACTION}"
+    echo "$ACMD"
+    eval $ACMD
+    WAIT=1;
+    while [ $STATE != 'active' ]
+    do
+        echo "Server state is ${STATE}"
+        echo "wait ${WAIT}\" and check again"
+        sleep $WAIT;
+        let "WAIT++";
+        echo "$CMD";
+        eval $CMD;
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`);
+    done;
+    echo "Server state is $STATE"
+    echo
+
+    echo "RESTART server"
+    echo "Meaning: kamaki server restart ${SERVER_URL}"
+    ACTION="restart"
+    ACMD="${BASE_CMD} --resource ${SUFFIX} --action trigger --trigger-action ${ACTION}"
+    echo "$ACMD"
+    eval $ACMD
+    echo
 
     echo "Destroy server instance ${SUFFIX}";
     echo "Meaning: kamaki server delete ${SERVER_URL}";
