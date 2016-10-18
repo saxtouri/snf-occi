@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2016 GRNET S.A.
+# Copyright (C) 2016 GRNET S.A.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,18 +13,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from setuptools import setup
+from paste import deploy
+import logging
+from paste import httpserver
 
-setup(
-    name='snf-occi',
-    version='0.3',
-    description='OCCI to Openstack/Cyclades API bridge',
-    url='http://code.grnet.gr/projects/snf-occi',
-    license='GPLv3',
-    packages=['soi', ],
-    entry_points='''
-        [paste.app_factory]
-        snf_occi_app=soi:main
-        ''',
-    install_requires=['kamaki', 'ooi==0.3.2', ]
-)
+try:
+    from soi.config import PASTE_INI, HOST, PORT
+except (ImportError, NameError) as err:
+    from sys import stderr, exit
+    stderr.write('{err}\n'.format(err=err))
+    stderr.write(
+        'Make sure soi/config.py exists and contains appropriate values.\n')
+    stderr.write('Refer to the documentation for more information\n')
+    exit(1)
+
+LOG = logging.getLogger(__name__)
+
+# Setup a server for testing
+application = deploy.loadapp('config:{0}'.format(PASTE_INI))
+httpserver.serve(application, HOST, PORT)

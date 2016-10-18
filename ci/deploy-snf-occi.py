@@ -15,7 +15,7 @@
 
 from paste import deploy
 import logging
-from soi.config immport PASTE_INI
+from soi.config import PASTE_INI
 
 LOG = logging.getLogger(__name__)
 

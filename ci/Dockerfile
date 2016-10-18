@@ -12,17 +12,24 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-# Dockerfile for snf-occi-manual-ci
-# contains functional testing scripts
 #
-# VERSION   0.3.1
+#  VERSION: 0.1
+#
+# docker run -ti --name occi-ci --net host -p 127.0.0.1:8080:8080 \
+#      -e AUTH_URL='https://accounts.okeanos.grnet.gr/identity/v2.0' \
+#      -e KEYSTONE_URL='https://okeanos-astavoms.hellasgrid.gr' -d \
+#      snf-occi-ci:latest
+# docker logs -ft occi-ci
 
-FROM egifedcloud/fedcloud-userinterface:latest
+FROM debian:jessie
 MAINTAINER Stavros Sachtouris <saxtouri@grnet.gr>
-RUN apt update && apt install ca-policy-egi-core curl -y
+RUN apt update && apt upgrade -y \
+    && apt install -y python-pip python-dev git curl
+RUN pip install Paste PasteScript pytz ooi
+RUN git clone https://github.com/grnet/snf-occi.git
+COPY config.py /snf-occi/soi/config.py
+RUN cd /snf-occi && python setup.py clean install
+EXPOSE 8080
 
-COPY run_functional_tests.sh /data/
-COPY run_curl_tests.sh /data/
-COPY run.sh /data/
-CMD ["/bin/bash", "/data/run.sh"]
+CMD ["python", "/snf-occi/ci/run-server.py"]
+

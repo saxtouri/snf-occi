@@ -21,4 +21,4 @@ KEYSTONE_URL = 'https://okeanos-astavoms.example.com'
 
 HOST = 'this-host.example.com or IP'
 PORT = '8080'
-PASTE_INI = '/home/user/snf-occi/paste_deploy/soi.ini'
+PASTE_INI = '/home/user/snf-occi/ci/soi.ini'

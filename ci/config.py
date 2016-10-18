@@ -11,15 +11,16 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# along with this program. If not, see <http://www.gnu.org/licenses/>
 
-from paste import deploy
-import logging
-from paste import httpserver
-from soi.config import PASTE_INI, HOST, PORT
+#  Copy this file as config.py and fill in the appropriate values
 
-LOG = logging.getLogger(__name__)
+import os
 
-# Setup a server for testing
-application = deploy.loadapp('config:{0}'.format(PASTE_INI))
-httpserver.serve(application, HOST, PORT)
+AUTH_URL = os.environ.get('AUTH_URL')
+CA_CERTS = os.environ.get('CA_CERTS', '/etc/ssl/certs/ca-certificates.crt')
+KEYSTONE_URL = os.environ.get('KEYSTONE_URL')
+
+HOST = os.environ.get('HOST', '127.0.0.1')
+PORT = os.environ.get('PORT', '8080')
+PASTE_INI = '/snf-occi/ci/soi.ini'

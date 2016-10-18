@@ -6,26 +6,32 @@
 About snf-occi
 ==============
 
-**snf-occi** snf-occi implements the OCCI specification on top of Synnefo’s API in order to achieve greater interoperability in common tasks referring cyclades management. This module is a translation bridge between OCCI and the Openstack API and is designed to be as independent as possible from the rest IaaS, providing an OCCI compatibility layer to other services using Openstack API. 
+**snf-occi** snf-occi is an OCCI API proxy for the Synnefo IaaS cloud. The
+purpose of snf-occi is to provide and OCCI REST API for Synnefo's Cyclades API,
+which provides compute, networking and volume services.
 
-**snf-occi** is based in modules provided by kamaki library-tool when dealing with REST API calls to Openstack.
+The implementation of snf-occi is based on Openstack OCCI Interface (OOI)
+project, since version 0.3. OOI is a WSGI proxy for OpenStack. Synnefo API is
+(almost) compatible with OpenStack, so snf-occi patches OOI wherever needer to
+ensure the desired API compatibility. Clients running on OOI should be able to
+run on snf-occi as well.
+
+**snf-occi** is depends on kamaki library for communicating with Synnefo, and 
+OOI for receiving and understanding OCCI calls.
 
 .. toctree::
    :maxdepth: 2
 
 About Open Cloud Computing Interface (OCCI)
 -------------------------------------------
-The current OCCI specification consists of the following three documents:
-
-* `OCCI Core <http://ogf.org/documents/GFD.183.pdf>`_
-* `OCCI Infrastructure <http://ogf.org/documents/GFD.184.pdf>`_
-* `OCCI HTTP rendering <http://ogf.org/documents/GFD.185.pdf>`_
-
-The master document for the OCCI specification is at `OCCI Specification <http://occi-wg.org/about/specification/>`_
+OCCI unifies various cloud compute services in a common API and a product of
+the EGI initiative. For more information on OCCI: www.ogf.org
 
 OCCI and Cyclades
 -----------------
-The OCCI implementation for Cyclades is going to be based in the OCCI 1.1 Infrastructure specification, in which common Cloud IaaS components are described. The correspondence between OCCI and Cyclades is as follows:
+The OCCI implementation for Cyclades currently implements OCCI 1.1
+Infrastructure specification. The correspondence between OCCI and Cyclades is
+as follows:
 
 +-------------------------+-------------------------+
 |OCCI                     |Cyclades                 |
@@ -36,82 +42,36 @@ The OCCI implementation for Cyclades is going to be based in the OCCI 1.1 Infras
 +-------------------------+-------------------------+
 |Resource Template        |Synnefo flavors          |
 +-------------------------+-------------------------+
-|Networking               |NA                       |
+|Networking               |Synnefo Networking       |
 +-------------------------+-------------------------+
-|Storage                  |NA                       |
+|Storage                  |Synnefo Volumes          |
 +-------------------------+-------------------------+
 
 
- 
-**Note:** Metadata info in Synnefo's servers cannot be represented (clearly) using OCCI's components.
+.. Note: Metadata info in Synnefo's servers cannot be represented (clearly) using OCCI's components.
 
-
-OCCI requirements
------------------
-Due to OCCI's structure there cannot be straightforward mapping to Cyclades/OpenStack API. The missing elements are networking and storage capabilities using current Cyclades API.
-
-OCCI operations
-****************
-
-Below you can see the required procedures/operations for OCCI compatibility.
-   
-* Handling the query interface
-   * Query interface must be found under path /-/
-   * Retrieve all registered Kinds, Actions and Mixins
-   * Add a mixin definition
-   * Remove a mixin definition
-
-* Operation on paths in the name-space 
-   * Retrieving the state of the name-space hierarchy
-   * Retrieving all Resource instances below a path
-   * Deletion of all Resource instances below a path
-
-* Operations on Mixins and Kinds
-   * Retrieving all Resource instances belonging to Mixin or Kind
-   * Triggering actions to all instances of a Mixin or a Kind
-   * Associate resource instances with a Mixin or a Kind
-   * Full update of a Mixin collection
-   * Dissociate resource instances from a Mixin
-
-* Operations on Resource instances
-   * Creating a resource instance
-   * Retrieving a resource instance
-   * Partial update of a resource instance
-   * Full update of a resource instance
-   * Delete a resource instance
-   * Triggering an action on a resource instance
-
-* Handling Link instances
-   * Inline creation of a Link instance
-   * Retrieving Resource instances with defined Links
-   * Creating of Link Resource instance
-
-
-OCCI client/server library
-==========================
-
-pyssf is a collection of OCCI python modules. It aims to provide a high-level interface for the integration of OCCI to other new or existing applications. 
-
-Features:
----------
-
-* It includes a REST API service with the OCCI specifications already implemented
-* It only requires a custom backend and registry to interact with Cyclades
 
 Current progress
 =================
-By now we have considered implementing only the **Compute** backend of the OCCI to Cyclades/Openstack API bridge and we are planning to extend it for **networking** and **storage** capabilities. It is possible to implement the remaining capabilities directly for OCCI 1.2, though.
+We currently have an adequate implementation of the **compute** API and we are
+planning to extend it for **networking** and **volumes** as soon as possible.
+We will also provide the corresponding implementations for OCCI 1.2, as soon as
+they are implemented in OOI.
 
 Installation
 -------------
-Install **snf-occi** API translation server by cloning our latest source code:
+
+The following instructions have been tested on Debian Jessy with pythoh-pip
+installed. It is suggested to install Paste and PasteScript for deployment.
 
 ::
 
-  git clone https://github.com/grnet/snf-occi
-  cd snf-occi
-  cp snfOCCI/config.py.template snfOCCI/config.py
-  python setup.py install
+  $ git clone https://github.com/grnet/snf-occi
+  $ cd snf-occi
+  $ cp soi/config.py.template snfOCCI/config.py
+  $ vim soi/confg.py
+  ...
+  $ python setup.py install
 
 **NOTE**: edit the **config.py** before running the service. In the following
 example, we replicate the settings of the hellasgrid service, but you can set
@@ -121,82 +81,114 @@ your own cloud and astavoms settings in your own deployment
 
   #  Copy this file as config.py and fill in the appropriate values
   
-  COMPUTE = {
-    'arch': 'x86',
-  }
-  
-  KAMAKI = {
-    'compute_url': 'https://cyclades.okeanos.grnet.gr/compute/v2.0/',
-    'astakos_url': 'https://accounts.okeanos.grnet.gr/identity/v2.0',
-    'network_url': 'https://cyclades.okeanos.grnet.gr/network/v2.0'
-  }
-  
+  AUTH_URL = 'https://accounts.okeanos.grnet.gr/identity/v2.0'
+  CA_CERTS = '/etc/ssl/certs/ca-certificates.crt'
   KEYSTONE_URL = 'https://okeanos-astavoms.hellasgrid.gr'
-  HOSTNAME = 'https://okeanos-occi2.hellasgrid.gr:9000'
-  PASTEDEPLOY = '/home/user/src/snf-occi/snfOCCI/paste_deploy/snf-occi-paste.ini'
 
-snf-occi is a simple WSGI python application with basic paste support. A full scale deployment is out of the scope of this document, but it is expected to use standard tools like apache and gunicorn to setup the service.
+  HOST = '127.0.0.1'
+  PORT = '8080'
+  PASTE_INI = '/path/to/snf-occi/ci/soi.ini''
 
-Examples:
----------
-For the examples below we assume server is running on localhost (port 8888) and authentication token is $AUTH. For the HTTP requests we are using **curl**.
+snf-occi is a simple WSGI python application with basic paste support. A full
+scale deployment is out of the scope of this document, but deployments with
+apache and gunicorn have been tested and work well.
+
+Running with docker
+===================
+
+To test snf-occi, you can build and use a docker image, as described in the
+"ci/README.md" file, or just follow these steps:
+
+::
+
+    $ docker build -t snf-occi-ci https://github.com/grnet/snf-occi#master:ci
+    $ docker run -ti --name occi-ci --net host -p 127.0.0.1:8080:8080 \
+        -e AUTH_URL='https://accounts.okeanos.grnet.gr/identity/v2.0' \
+        -e KEYSTONE_URL='https://okeanos-astavoms.hellasgrid.gr' -d \
+        snf-occi-ci
+
+
+Testing
+=======
+
+Functional tests
+----------------
+
+The current snf-occi has good test coverage. Two equivalent sets of functional
+tests (curl and rOCCI) in the form of bash scripts can be found in
+"soi/tests/functional/". To run the script, make sure you have setup following
+environment variables:
+
+::
+
+  $ export OCCI_ENDPOINT="http:127.0.0.1:8080"
+  $ export TOKEN="Your-Synnefo-User-Token"
+  $ export USER_PROXY="/path/to/your/VOMS/proxy"
+  $ export OS_TPL="13"
+  $ export RESOURCE_TPL="6f1f7205-cf4c-4b8c-ae77-7c419747bcbd"
+
+The USER_PROXY is only needed if you run the rOCCI-based "run_function_tests.sh",
+while TOKEN is only needed if you run the "run_curl_tests.sh" script.
+
+You can setup a docker client for testing. Follow the
+"soi/tests/functional/README.md" instructions and test the application with the
+prepared queries or the examples of the current document. The instructions will
+guide you to build a docker image based on the
+`egifedcloud/fedcloud-userinterface` with all the functional tests loaded in
+the container.
+
+Examples
+--------
+For the examples below we assume server is running on localhost (port 8080) and authentication token is $TOKEN. For the HTTP requests we are using **curl**. All
+these tests are also programmed in "soi/tests/functional/run_curl_tests.sh"
 
 * Retrieve all registered Kinds, Actions and Mixins:
 
   ::
 
-    curl -v -X GET localhost:8888/-/ -H 'Auth-Token: $AUTH'
+    curl -X GET localhost:8080/-/ -H 'X-Auth-Token: $TOKEN'
 
-* Create a new VM described by the flavor 'C2R2048D20' and using the image 'Debian'
+* List all VMs:
+
+  ::
+
+    curl -X GET localhost:8080/compute -H 'X-Auth-Token: $TOKEN'
+
+* Create a new VM described by the flavor 13 and using the image
+  6f1f7205-cf4c-4b8c-ae77-7c419747bcbd:
 
   ::
  
-    curl -v -X POST localhost:8888/compute/ 
-    -H 'Category: compute; scheme=http://schemas.ogf.org/occi/infrastructure#;  class="kind";' 
-    -H 'X-OCCI-Attribute: occi.core.title = newVM' -H 'Category: C2R2048D20; scheme=http://schemas.ogf.org/occi/infrastructure#; ' 
-    -H 'Category: Debian; scheme=http://schemas.ogf.org/occi/infrastructure#;' -H 'Auth-Token: $AUTH' 
-    -H 'Content-type: text/occi'
+    curl -X POST localhost:8080/compute/ \
+    -H 'Category: compute; scheme=http://schemas.ogf.org/occi/infrastructure#; class="kind";' \
+    -H 'X-OCCI-Attribute: occi.core.title = newVM' -H 'Category: 13; scheme=http://schemas.ogf.org/occi/infrastructure#;' \
+    -H 'Category: 6f1f7205-cf4c-4b8c-ae77-7c419747bcbd; scheme=http://schemas.ogf.org/occi/infrastructure#;' \
+    -H 'X-Auth-Token: $TOKEN' -H 'Content-type: text/occi'
 
 * Retrieve all the details of th VM with identifier $ID
 
   ::
 
-    curl -v -X GET localhost:8888/compute/$ID -H 'Auth-Token: $AUTH'
+    curl -X GET localhost:8080/compute/$ID -H 'X-Auth-Token: $TOKEN'
+
+* Start/Stop/Restart a VM with $ID:
+
+  ::
+
+    curl -X POST -H 'X-Auth-Token: $TOKEN' localhost:8080/compute/$ID?action=start \
+    -H 'Category: start ; scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'
+
+    curl -X POST -H 'X-Auth-Token: $TOKEN' localhost:8080/compute/$ID?action=stop \
+    -H 'Category: stop ; scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'
+
+    curl -X POST -H 'X-Auth-Token: $TOKEN' localhost:8080/compute/$ID?action=restart \
+    -H 'Category: restart ; scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'
 
 * Delete the VM with identifier $ID
 
   ::
   
-    curl -v -X DELETE localhost:8888/compute/$ID -H 'Auth-Token: $AUTH'
-
-Testing
--------
-Here is how to run a local paste server. This is useful only for experimenting
-and development and should not be used in production. We suggest to run this
-test in a sandboxed environment e.g., virtualenv
-
-::
-
-  virtualenv mytest
-  source mytest/bin/activate
-  pip install Paste PasteDeploy
-  cp snfOCCI/paste_deploy/test-server.py .
-  python test-server.py
-    server is running on 127.0.0.1:8080
-
-Follow the test/README.md instructions to setup a client e.g., with docker, and
-test the application with the prepared queries or the examples of the current
-document.
-
-A smart way to test the application is by using the `egifedcloud/fedcloud-userinterface`. Make sure you have valid and authorized proxy certificates in your ${HOME}/.globus directory, and then start a cointainer shell loaded with all necessary client tools. E.g., to perform a "list servers" operation:
-
-  ::
-
-    $ docker run -v /home/user/.globus:/root/.globus -it egifedcloud/fedcloud-userinterface /bin/bash
-    # fetch-crl -p 20
-    # voms-proxy-init --voms fedcloud.egi.eu -rfc
-      Your proxy is stored at /tmp/x509up_u0
-    # occi --endpoint https://snf-occi.example.com --action list --resource compute -n x509 -x /tmp/x509up_u0 -X
+    curl -X DELETE localhost:8080/compute/$ID -H 'X-Auth-Token: $TOKEN'
 
 
 Indices and tables
