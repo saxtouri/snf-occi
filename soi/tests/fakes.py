@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2016 GRNET S.A.
+# Copyright (C) 2016 GRNET S.A.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,20 +11,21 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from setuptools import setup
 
-setup(
-    name='snf-occi',
-    version='0.3',
-    description='OCCI to Openstack/Cyclades API bridge',
-    url='http://code.grnet.gr/projects/snf-occi',
-    license='GPLv3',
-    packages=['soi', 'soi.tests'],
-    entry_points='''
-        [paste.app_factory]
-        snf_occi_app=soi:main
-        ''',
-    install_requires=['kamaki', 'ooi==0.3.2', ]
-)
+class FakeReq:
+    """use it for testing"""
+    def __init__(self, *args, **kwargs):
+        self.environ = dict()
+
+    def get_response(self, *args, **kwargs):
+        """Don't do enything"""
+
+
+class DummyClass:
+    """use it for testing"""
+    def app(self, *args, **kwargs):
+        """inner app"""
+
+    def get_from_response(self, *args, **kwargs):
+        """Don't do enything"""

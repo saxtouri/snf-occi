@@ -14,6 +14,7 @@
 
 from soi import utils
 from mock import patch
+from soi.tests import fakes
 
 
 def test_patch_class_methods():
@@ -38,34 +39,12 @@ def test_patch_class_methods():
     assert client.an_other_method('arg1', 'arg2') == 'replace arg1 arg2'
 
 
-def test_empty_list_200():
+@patch('soi.tests.fakes.DummyClass.get_from_response', return_value='g f r')
+@patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
+def test_empty_list_200(gr, gfr):
     """Test the empty list method"""
-    class FakeReq:
-        """use it for testing"""
-        environ = dict()
-
-        def get_response(self, *args, **kwargs):
-            """Don't do enything"""
-
-    class DummyClass:
-        """use it for testing"""
-        def app(self, *args, **kwargs):
-            """inner app"""
-
-        def get_from_response(self, *args, **kwargs):
-            """Don't do enything"""
-
-    setattr(utils, 'FakeReq', FakeReq)
-    setattr(utils, 'DummyClass', DummyClass)
-
-    with patch(
-            'soi.utils.FakeReq.get_response',
-            return_value='my response') as gr:
-        with patch(
-                'soi.utils.DummyClass.get_from_response',
-                return_value='get from response') as gfr:
-            cls, req = DummyClass(), FakeReq()
-            r = utils.empty_list_200(cls, req)
-            assert r == 'get from response'
-            gfr.assert_called_once_with('my response', 'empty list', [])
-            gr.assert_called_once_with(cls.app)
+    cls, req = fakes.DummyClass(), fakes.FakeReq()
+    r = utils.empty_list_200(cls, req)
+    assert r == 'g f r'
+    gfr.assert_called_once_with('my response', 'empty list', [])
+    gr.assert_called_once_with(cls.app)

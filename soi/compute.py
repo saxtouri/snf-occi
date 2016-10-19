@@ -142,31 +142,20 @@ def snf_delete_server(cls, req, server_id):
 
 def snf_run_action(cls, req, action, server_id):
     """Synnefo: server actions"""
-
-    actions_map = {
-        "stop": {"kwargs": {"server_id": server_id,
-                            "json_data": {"shutdown": {}}
-                            }
-                 },
-
-        "start": {"kwargs": {"server_id": server_id,
-                             "json_data": {"start": {}}
-                             }
-                  },
-        "restart": {"kwargs": {"server_id": server_id,
-                               "json_data": {"reboot": {"type": "SOFT"}}
-                               }
-                    }
-    }
     try:
-        action = actions_map[action]
-        req.environ['service_type'] = 'compute'
-        req.environ['method_name'] = 'servers_action_post'
-        req.environ.update(action)
-        req.get_response(cls.app)
+        json_data = {
+            'start': {'start': {}},
+            'stop': {'shutdown': {}},
+            'restart': {'reboot': {'type': 'SOFT'}}
+        }[action]
     except KeyError:
         raise webob.exc.HTTPNotImplemented(
             explanation='Action {0} not supported'.format(action))
+
+    req.environ['service_type'] = 'compute'
+    req.environ['method_name'] = 'servers_action_post'
+    req.environ['kwargs'] = {'server_id': server_id, 'json_data': json_data}
+    req.get_response(cls.app)
 
 
 function_map = {
