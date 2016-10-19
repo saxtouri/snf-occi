@@ -14,12 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-CMD1="fetch-crl -p 20"
-echo $CMD1
-$(echo $CMD1)
+if [ -z "$SNF_OCCI_BRANCH"]; then
+    export SNF_OCCI_BRANCH="develop"
+fi
 
-CMD2="voms-proxy-init -voms fedcloud.egi.eu --rfc"
-echo $CMD2
-$(echo $CMD2)
-
-/bin/bash
+cd /snf-occi && git fetch --all && git checkout ${SNF_OCCI_BRANCH} && git pull \
+&& python setup.py install
+python /snf-occi/ci/run-server.py

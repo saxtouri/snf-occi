@@ -11,7 +11,7 @@ Alternatively, you can, of course, use the grnet repository to build the image:
 
 ::
 
-  $ docker build -t snf-occi-client:<version> https://github.com/grnet/snf-occi.git#master:soi/tests/functional
+  $ docker build -t snf-occi-client:<version> https://github.com/grnet/snf-occi.git#develop:soi/tests/functional
 
 Run a new container
 -------------------

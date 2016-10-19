@@ -101,11 +101,15 @@ To test snf-occi, you can build and use a docker image, as described in the
 
 ::
 
-    $ docker build -t snf-occi-ci https://github.com/grnet/snf-occi#master:ci
+    $ docker build -t snf-occi-ci https://github.com/grnet/snf-occi.git#develop:ci
     $ docker run -ti --name occi-ci --net host -p 127.0.0.1:8080:8080 \
+        -e SNF_OCCI_BRANCH="master" \
         -e AUTH_URL='https://accounts.okeanos.grnet.gr/identity/v2.0' \
         -e KEYSTONE_URL='https://okeanos-astavoms.hellasgrid.gr' -d \
         snf-occi-ci
+
+.. note: The default branch for CI testing is "develop", but you can test any
+  branch you want by setting the SNF_OCCI_BRANCH environment variable.
 
 
 Testing
