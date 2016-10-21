@@ -15,6 +15,7 @@
 from soi.tests import fakes
 from soi import compute
 from mock import patch
+from base64 import b64encode
 
 
 @patch('soi.tests.fakes.DummyClass.get_from_response', return_value='g f r')
@@ -277,6 +278,79 @@ def test_snf_create_server(gr, gfr, _oa):
         _response['addresses'], _response['attachments'])
 
 
+def test__get_personality():
+    """Test personality syntax method"""
+    image = dict(id='some id', metadata=dict(users='root'))
+    public_key = 'some public key'
+    pkey = b64encode(public_key)
+    constant = '/var/lib/cloud/seed/nocloud-net/meta-data'
+    suffix = '.ssh/authorized_keys'
+
+    r = compute._get_personality(image, public_key)
+    assert r == [
+        {'contents': pkey, 'path': constant},
+        {
+            'contents': pkey, 'path': '/root/{0}'.format(suffix),
+            'owner': 'root', 'group': 'root', 'mode': 0600
+        }
+    ]
+
+    image['metadata']['users'] = 'user'
+    r = compute._get_personality(image, public_key)
+    assert r == [
+        {'contents': pkey, 'path': constant},
+        {
+            'contents': pkey, 'path': '/home/user/{0}'.format(suffix),
+            'owner': 'user', 'group': 'user', 'mode': 0600
+        }
+    ]
+
+    image['metadata']['users'] = 'root user'
+    r = compute._get_personality(image, public_key)
+    assert r == [
+        {'contents': pkey, 'path': constant},
+        {
+            'contents': pkey, 'path': '/root/{0}'.format(suffix),
+            'owner': 'root', 'group': 'root', 'mode': 0600
+        },
+        {
+            'contents': pkey, 'path': '/home/user/{0}'.format(suffix),
+            'owner': 'user', 'group': 'user', 'mode': 0600
+        }
+    ]
+
+
+@patch('soi.compute.snf_get_image', return_value='some image')
+@patch('soi.compute._get_personality', return_value=['some key'])
+@patch('soi.compute._openstackify_addresses')
+@patch('soi.tests.fakes.DummyClass.get_from_response', return_value=_response)
+@patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
+def test_snf_create_server_with_pk(gr, gfr, _oa, gp, snfci):
+    """Test snf_create_server"""
+    cls, req = fakes.DummyClass(), fakes.FakeReq()
+    req.environ['soi:public_keys'] = {'key_name': 'some key'}
+    req.environ['HTTP_X_PROJECT_ID'] = 'a project id'
+    args = ('a name', 'an image', 'a flavor')
+    r = compute.snf_create_server(cls, req, *args)
+    assert r == _response
+
+    import json
+    print json.dumps(req.environ, indent=2)
+
+    assert req.environ == {
+        'HTTP_X_PROJECT_ID': 'a project id',
+        'service_type': 'compute',
+        'method_name': 'servers_post',
+        'soi:public_keys':  {'key_name': 'some key'},
+        'kwargs': dict(json_data=dict(server=dict(
+            name='a name', imageRef='an image', flavorRef='a flavor',
+            project='a project id', personality=['some key', ])))}
+    gr.assert_called_once_with(cls.app)
+    gfr.assert_called_once_with('my response', 'server', {})
+    _oa.assert_called_once_with(
+        _response['addresses'], _response['attachments'])
+
+
 @patch('soi.tests.fakes.FakeReq.get_response')
 def test_snf_delete_server(gr):
     """Test snf_delete_server"""
@@ -326,3 +400,16 @@ def test_snf_run_action_suspend(gr):
     except Exception as e:
         from webob.exc import HTTPNotImplemented
         assert isinstance(e, HTTPNotImplemented)
+
+
+def test_keypair_register():
+    """Test keypair_register"""
+    cls, req = fakes.DummyClass(), fakes.FakeReq()
+    name, pk = 'key_name', 'rsa-ssa keystuffhere ==user@host'
+    compute.keypair_register(cls, req, name, pk)
+    assert 'soi:public_keys' in req.environ
+    assert req.environ['soi:public_keys'] == {name: pk}
+
+    name0, pk0 = 'key_name0', 'rsa-ssa otherstuffhere ==user@host'
+    compute.keypair_register(cls, req, name0, pk0)
+    assert req.environ['soi:public_keys'] == {name: pk, name0: pk0}

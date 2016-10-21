@@ -12,8 +12,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-from utils import empty_list_200
+from base64 import b64encode
 import webob.exc
+from soi.utils import empty_list_200
+from os.path import join
 
 
 def snf_index(cls, req):
@@ -116,19 +118,49 @@ def snf_get_server_net_attachments(cls, req, compute_id):
     return r
 
 
+def _get_personality(image, public_key):
+    """Resolve superuser from VM, prepare public_key injection
+    :returns: {contents: public_key, path: , owner: , group: , mode: }
+    """
+    pkey = b64encode(public_key)
+    personality = [{
+        'contents': pkey,
+        'path': '/var/lib/cloud/seed/nocloud-net/meta-data'
+    }]
+    try:
+        users = image['metadata']['users']
+    except KeyError:
+        return personality
+
+    for user in users.split():
+        prefix = '/' if user == 'root' else '/home'
+        path = join(prefix, user, '.ssh', 'authorized_keys')
+        personality.append(dict(
+            contents=pkey, path=path, owner=user, group=user, mode=0600))
+    return personality
+
+
 def snf_create_server(cls, req, name, image, flavor, **kwargs):
     """Synnefo: create a new VM"""
-    req.environ['service_type'] = 'compute'
-    req.environ['method_name'] = 'servers_post'
-
     project = req.environ.get('HTTP_X_PROJECT_ID', None)
     body = dict(name=name, imageRef=image, flavorRef=flavor, project=project)
+
+    public_keys = req.environ.get('soi:public_keys')
+    if public_keys:
+        image_info, personality = snf_get_image(cls, req, image), []
+        for public_key in public_keys.values():
+            personality += _get_personality(image_info, public_key)
+        body['personality'] = personality
+
     body.update(kwargs)
     req.environ['kwargs'] = dict(json_data=dict(server=body))
+    req.environ['service_type'] = 'compute'
+    req.environ['method_name'] = 'servers_post'
 
     response = req.get_response(cls.app)
     r = cls.get_from_response(response, 'server', {})
     _openstackify_addresses(r['addresses'], r['attachments'])
+
     return r
 
 
@@ -158,6 +190,13 @@ def snf_run_action(cls, req, action, server_id):
     req.get_response(cls.app)
 
 
+def keypair_register(cls, req, name, public_key):
+    """Put public key in req.environ['public_keys'], with name as key"""
+    public_keys = req.environ.get('soi:public_keys', {})
+    public_keys[name] = public_key
+    req.environ['soi:public_keys'] = public_keys
+
+
 function_map = {
     'index': snf_index,
     'get_server': snf_get_server,
@@ -171,4 +210,5 @@ function_map = {
     'delete': snf_delete_server,
     'create_server': snf_create_server,
     'run_action': snf_run_action,
+    'keypair_create': keypair_register
 }
