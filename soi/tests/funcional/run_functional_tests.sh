@@ -28,12 +28,19 @@ echo "OS_TPL = ${OS_TPL}"
 if [ -z "$RESOURCE_TPL" ]; then echo "E: RESOURCE_TPL not set"; exit 1; fi;
 echo "RESOURCE_TPL = ${RESOURCE_TPL}";
 
+
+if [ -z "$SNF_OCCI_DEBUG" ]; then
+    XARGS="";
+else 
+    XARGS="-d";
+fi
+
 echo "Vars OK, run tests"
 echo
 
 
-BASE_CMD="occi --endpoint ${OCCI_ENDPOINT} -n x509 -X --user-cred ${USER_PROXY}"
-
+BASE_CMD="occi ${XARGS} --endpoint ${OCCI_ENDPOINT} -n x509 -X --user-cred ${USER_PROXY}"
+VM_INFO="/tmp/vm.info"
 
 echo "List OS templates"
 echo "Meaning: kamaki image list"
@@ -64,10 +71,10 @@ eval $CMD
 echo
 
 echo "Create a server instance"
-echo "Meaning: kamaki server create --name \"My Test VM\" \\"
+echo "Meaning: kamaki server create --name \"OCCI test VM\" \\"
 echo "    --flavor-id <ID of c2r2048d40drb> --image-id <ID of ${OS_TPL}>"
 CMD="${BASE_CMD} --action create --resource compute "
-CMD="${CMD} --attribute occi.core.title=\"My Test VM\""
+CMD="${CMD} --attribute occi.core.title=\"OCCI test VM\""
 CMD="${CMD} --mixin os_tpl#${OS_TPL} --mixin resource_tpl#${RESOURCE_TPL}"
 echo "$CMD"
 VM_URL=$(eval $CMD)
@@ -88,23 +95,21 @@ else
 
     echo "Details on server instance ${SUFFIX}";
     echo "Meaning: kamaki server info ${SERVER_URL}";
-    CMD="${BASE_CMD} --action describe --resource ${SUFFIX} > vm.info";
+    CMD="${BASE_CMD} --action describe --resource ${SUFFIX} > ${VM_INFO}";
     echo "$CMD";
     eval $CMD;
-    STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`)
+    STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`)
 
     WAIT=1;
     while [ $STATE != 'active' ]
     do
-        echo "Server state is ${STATE}"
-        echo "wait ${WAIT}\" and check again"
+        echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
         sleep $WAIT;
         let "WAIT++";
-        echo "$CMD";
         eval $CMD;
-        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`);
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
     done;
-    cat vm.info;
+    cat $VM_INFO;
 
     echo "STOP server"
     echo "Meaning: kamaki server shutdown ${SERVER_URL}"
@@ -115,13 +120,11 @@ else
     WAIT=1;
     while [ $STATE != 'inactive' ]
     do
-        echo "Server state is ${STATE}"
-        echo "wait ${WAIT}\" and check again"
+        echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
         sleep $WAIT;
         let "WAIT++";
-        echo "$CMD";
         eval $CMD;
-        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`);
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
     done;
     echo "Server state is $STATE"
     echo
@@ -135,13 +138,11 @@ else
     WAIT=1;
     while [ $STATE != 'active' ]
     do
-        echo "Server state is ${STATE}"
-        echo "wait ${WAIT}\" and check again"
+        echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
         sleep $WAIT;
         let "WAIT++";
-        echo "$CMD";
         eval $CMD;
-        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' vm.info`);
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
     done;
     echo "Server state is $STATE"
     echo
@@ -160,4 +161,88 @@ else
     echo "$CMD";
     eval $CMD;
 fi;
+echo
+
+echo "Check contextualization"
+echo
+
+echo "Create a PPK pair:"
+PPK_DIR="/tmp"
+TIMESTAMP=`date +"%Y%m%d%H%M%s"`
+PPK="ppk${TIMESTAMP}"
+PPK_GEN_CMD="ssh-keygen -f ${PPK_DIR}/${PPK} -t rsa -N ''"
+echo $PPK_GEN_CMD
+eval $PPK_GEN_CMD
+PUBLIC_KEY=`cat ${PPK_DIR}/${PPK}.pub`
+echo "Public Key:"
+echo $PUBLIC_KEY
+echo
+echo
+
+echo "Create a server instance with PPK"
+echo "Meaning: kamaki server create --name \"OCCI test VM\" \\"
+echo "    --flavor-id ${RESOURCE_TPL} --image-id ${OS_TPL} \\"
+echo "    -p (`pwd`)/id_rsa.pub,/root/.ssh/authorized_keys,root,root,0600"
+CMD="${BASE_CMD} --action create --resource compute"
+CMD="${CMD} --attribute occi.core.title=\"OCCI test VM\""
+CMD="${CMD} --mixin os_tpl#${OS_TPL} --mixin resource_tpl#${RESOURCE_TPL}"
+CMD="${CMD} --context public_key='${PUBLIC_KEY}'"
+echo "$CMD"
+VM_URL=$(eval $CMD)
+echo "VM URL: ${VM_URL}"
+SUFFIX=(`echo ${VM_URL}|awk '{n=split($0,a,"/"); print "/"a[n-1]"/"a[n]}'`)
+echo
+
+echo "Wait for server to get up"
+CMD="${BASE_CMD} --action describe --resource ${SUFFIX} > ${VM_INFO}";
+echo "$CMD";
+eval $CMD;
+STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`)
+
+WAIT=1;
+while [ $STATE != 'active' ]
+do
+    echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
+    sleep $WAIT;
+    let "WAIT++";
+    eval $CMD;
+    STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
+done;
+echo
+
+printf "Wait 16 seconds for the network |"
+for i in `seq 1 4`; do
+    sleep 1
+    printf "\b/"
+    sleep 1
+    printf "\b-"
+    sleep 1
+    printf "\b\\"
+    sleep 1
+    printf "\b|"
+done
+echo "\b\b. Fingers crossed..."
+echo
+
+echo "Check PPK authentication"
+VM_ID=(`echo ${SUFFIX}|awk '/\//{n=split($0,a,"/"); print a[n]; }'`)
+CMD="scp -o \"StrictHostKeyChecking no\" -i ${PPK_DIR}/${PPK} root@snf-${VM_ID}.vm.okeanos.grnet.gr:/root/.ssh/authorized_keys ${PPK_DIR}/${PPK}.downloaded"
+echo $CMD
+eval $CMD
+if [ -f ${PPK_DIR}/${PPK}.downloaded ]; then
+    echo "PPK authentication is OK"
+else
+    echo "PPK authentication FAILED"
+fi
+echo
+echo
+
+echo "Clean up"
+CMD="${BASE_CMD} --action delete --resource ${SUFFIX}";
+echo $CMD
+eval $CMD
+CMD="rm -f ${PPK_DIR}/${PPK}* ${VM_INFO}"
+echo $CMD
+eval $CMD
+echo
 echo

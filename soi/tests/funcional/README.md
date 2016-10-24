@@ -66,11 +66,13 @@ For instance, if you have a proxy, you may want to run something like:
 
 ::
 
-  $ docker run -v my_proxy:/data/my_proxy \
+  $ docker run --name occi_client -v my_proxy:/tmp/x509up_u0 \
     -e OCCI_ENDPOINT="https://okeanos-occi2.hellasgrid.gr:9000" \
-    -e TOKEN="My-Okeanos-Token"
-    -e USER_PROXY="/data/my_proxy" \
+    -e TOKEN="My-Okeanos-Token" \
+    -e USER_PROXY="/tmp/x509up_u0" \
     -e OS_TPL="6f1f7205-cf4c-4b8c-ae77-7c419747bcbd"\
     -e RESOURCE_TPL="13"\
     -ti snf-occi-client:latest
+
+TIP: To test on the same host, run the command with the "--net host" argument
 

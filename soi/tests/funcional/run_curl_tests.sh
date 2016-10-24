@@ -100,7 +100,7 @@ echo "Meaning: kamaki server shutdown"
 ACTION="stop"
 ACT="${BASE_CMD} -X POST ${VM_URL}?action=${ACTION} -H 'Category: ${ACTION} ;\
     scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'"
-echo "$CMD"
+echo "$ACT"
 eval $ACT
 echo "Check server state"
 echo $CMD
@@ -123,7 +123,7 @@ echo "Meaning: kamaki server start"
 ACTION="start"
 ACT="${BASE_CMD} -X POST ${VM_URL}?action=${ACTION} -H 'Category: ${ACTION} ;\
     scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'"
-echo "$CMD"
+echo "$ACT"
 eval $ACT
 echo "Check server state"
 echo $CMD
@@ -148,7 +148,7 @@ echo "Meaning: kamaki server restart"
 ACTION="restart"
 ACT="${BASE_CMD} -X POST ${VM_URL}?action=${ACTION} -H 'Category: ${ACTION} ;\
     scheme=\"http://schemas.ogf.org/occi/infrastructure/compute/action#\"; class=\"action\"'"
-echo "$CMD"
+echo "$ACT"
 eval $ACT
 echo "Check server state"
 echo $CMD
@@ -237,8 +237,8 @@ do
 done
 echo
 
-printf "Wait 12 seconds for the network |"
-for i in `seq 1 3`; do
+printf "Wait 16 seconds for the network |"
+for i in `seq 1 4`; do
     sleep 1
     printf "\b/"
     sleep 1
