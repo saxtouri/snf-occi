@@ -37,6 +37,12 @@ What is in the container
 You will find all the tools from egifedcloud/fedcloud-userinterface:latest plus
 two shell script to test the snf-occi application.
 
+To run the tests in debug mode (verbose) set the environment variable
+
+export SNF_OCCI_DEBUG=true
+
+Unset the variable for a less verbose execution
+
 To run the "run_functional_tests.sh" script, you must set some variables,
 either when you RUN the container or while you are inside the container.
 
