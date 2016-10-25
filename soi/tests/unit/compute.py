@@ -325,8 +325,8 @@ def test__get_personality():
 @patch('soi.compute._openstackify_addresses')
 @patch('soi.tests.fakes.DummyClass.get_from_response', return_value=_response)
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
-def test_snf_create_server_with_pk(gr, gfr, _oa, gp, snfci):
-    """Test snf_create_server"""
+def test_snf_create_server_with_pk_no_key_name(gr, gfr, _oa, gp, snfci):
+    """Test snf_create_server with pk no key name"""
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     req.environ['soi:public_keys'] = {'key_name': 'some key'}
     req.environ['HTTP_X_PROJECT_ID'] = 'a project id'
@@ -334,8 +334,34 @@ def test_snf_create_server_with_pk(gr, gfr, _oa, gp, snfci):
     r = compute.snf_create_server(cls, req, *args)
     assert r == _response
 
-    import json
-    print json.dumps(req.environ, indent=2)
+    assert req.environ == {
+        'HTTP_X_PROJECT_ID': 'a project id',
+        'service_type': 'compute',
+        'method_name': 'servers_post',
+        'soi:public_keys':  {'key_name': 'some key'},
+        'kwargs': dict(json_data=dict(server=dict(
+            name='a name', imageRef='an image', flavorRef='a flavor',
+            project='a project id')))}
+
+    gr.assert_called_once_with(cls.app)
+    gfr.assert_called_once_with('my response', 'server', {})
+    _oa.assert_called_once_with(
+        _response['addresses'], _response['attachments'])
+
+
+@patch('soi.compute.snf_get_image', return_value='some image')
+@patch('soi.compute._get_personality', return_value=['some key'])
+@patch('soi.compute._openstackify_addresses')
+@patch('soi.tests.fakes.DummyClass.get_from_response', return_value=_response)
+@patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
+def test_snf_create_server_with_pk(gr, gfr, _oa, gp, snfci):
+    """Test snf_create_server with pk"""
+    cls, req = fakes.DummyClass(), fakes.FakeReq()
+    req.environ['soi:public_keys'] = {'key_name': 'some key'}
+    req.environ['HTTP_X_PROJECT_ID'] = 'a project id'
+    args = ('a name', 'an image', 'a flavor')
+    r = compute.snf_create_server(cls, req, *args, key_name='key_name')
+    assert r == _response
 
     assert req.environ == {
         'HTTP_X_PROJECT_ID': 'a project id',
@@ -345,6 +371,71 @@ def test_snf_create_server_with_pk(gr, gfr, _oa, gp, snfci):
         'kwargs': dict(json_data=dict(server=dict(
             name='a name', imageRef='an image', flavorRef='a flavor',
             project='a project id', personality=['some key', ])))}
+    gr.assert_called_once_with(cls.app)
+    gfr.assert_called_once_with('my response', 'server', {})
+    _oa.assert_called_once_with(
+        _response['addresses'], _response['attachments'])
+
+
+@patch('soi.compute.snf_get_image', return_value='some image')
+@patch('soi.compute._openstackify_addresses')
+@patch('soi.tests.fakes.DummyClass.get_from_response', return_value=_response)
+@patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
+def test_snf_create_server_with_user_data(gr, gfr, _oa, snfci):
+    """Test snf_create_server with user data"""
+    cls, req = fakes.DummyClass(), fakes.FakeReq()
+    req.environ['HTTP_X_PROJECT_ID'] = 'a project id'
+    args = ('a name', 'an image', 'a flavor')
+    r = compute.snf_create_server(cls, req, *args, user_data='user data')
+    assert r == _response
+
+    exp_personlity = {
+        "path": "/var/lib/cloud/seed/nocloud-net/user-data",
+        "contents": b64encode('user data')
+    }
+
+    assert req.environ == {
+        'HTTP_X_PROJECT_ID': 'a project id',
+        'service_type': 'compute',
+        'method_name': 'servers_post',
+        'kwargs': dict(json_data=dict(server=dict(
+            name='a name', imageRef='an image', flavorRef='a flavor',
+            project='a project id', personality=[exp_personlity, ])))}
+    gr.assert_called_once_with(cls.app)
+    gfr.assert_called_once_with('my response', 'server', {})
+    _oa.assert_called_once_with(
+        _response['addresses'], _response['attachments'])
+
+
+@patch('soi.compute.snf_get_image', return_value='some image')
+@patch('soi.compute._get_personality', return_value=['some key'])
+@patch('soi.compute._openstackify_addresses')
+@patch('soi.tests.fakes.DummyClass.get_from_response', return_value=_response)
+@patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
+def test_snf_create_server_with_full_context(gr, gfr, _oa, gp, snfci):
+    """Test snf_create_server with user data"""
+    cls, req = fakes.DummyClass(), fakes.FakeReq()
+    req.environ['HTTP_X_PROJECT_ID'] = 'a project id'
+    req.environ['soi:public_keys'] = {'key_name': 'some key'}
+    args = ('a name', 'an image', 'a flavor')
+    r = compute.snf_create_server(
+        cls, req, *args, user_data='user data', key_name='key_name')
+    assert r == _response
+
+    exp_personlity = {
+        "path": "/var/lib/cloud/seed/nocloud-net/user-data",
+        "contents": b64encode('user data')
+    }
+
+    assert req.environ == {
+        'HTTP_X_PROJECT_ID': 'a project id',
+        'service_type': 'compute',
+        'method_name': 'servers_post',
+        'soi:public_keys':  {'key_name': 'some key'},
+        'kwargs': dict(json_data=dict(server=dict(
+            name='a name', imageRef='an image', flavorRef='a flavor',
+            project='a project id',
+            personality=[exp_personlity, 'some key', ])))}
     gr.assert_called_once_with(cls.app)
     gfr.assert_called_once_with('my response', 'server', {})
     _oa.assert_called_once_with(

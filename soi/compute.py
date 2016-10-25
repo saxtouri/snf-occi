@@ -145,11 +145,20 @@ def snf_create_server(cls, req, name, image, flavor, **kwargs):
     project = req.environ.get('HTTP_X_PROJECT_ID', None)
     body = dict(name=name, imageRef=image, flavorRef=flavor, project=project)
 
-    public_keys = req.environ.get('soi:public_keys')
-    if public_keys:
-        image_info, personality = snf_get_image(cls, req, image), []
-        for public_key in public_keys.values():
+    personality, user_data = [], kwargs.pop('user_data', None)
+    if user_data:
+        personality.append({
+            'contents': b64encode(user_data),
+            'path': '/var/lib/cloud/seed/nocloud-net/user-data'})
+
+    key_name = kwargs.pop('key_name', None)
+    if key_name:
+        public_key = req.environ.get('soi:public_keys', {}).get(key_name)
+        if public_key:
+            image_info = snf_get_image(cls, req, image)
             personality += _get_personality(image_info, public_key)
+
+    if personality:
         body['personality'] = personality
 
     body.update(kwargs)
