@@ -17,17 +17,19 @@ from ooi.wsgi import OCCIMiddleware
 from ooi.api.helpers import OpenStackHelper
 from soi.config import KEYSTONE_URL
 from soi.synnefo import AstakosClient, AUTH_URL
-from soi import utils, compute
+from soi import utils, compute, storage
 from kamaki.clients import ClientError
 
 
 utils.patch_class_methods(OpenStackHelper, compute.function_map)
+utils.patch_class_methods(OpenStackHelper, storage.function_map)
 
 
 REDIRECT_MSG = '401 - redirect to: {URL}'
 
 
 class SNFOCCIMiddleware(OCCIMiddleware):
+
     """Synnefo wrapper for OCCIMiddleware"""
 
     def __call__(self, environ, response, *args, **kwargs):
