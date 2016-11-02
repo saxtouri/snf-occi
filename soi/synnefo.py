@@ -29,7 +29,7 @@ import json
 from kamaki.clients import ClientError
 from kamaki.clients.astakos import AstakosClient
 from kamaki.clients.cyclades import (
-    CycladesComputeClient, CycladesNetworkClient)
+    CycladesComputeClient, CycladesNetworkClient, CycladesBlockStorageClient)
 from kamaki.clients.utils import https
 from soi.config import AUTH_URL, CA_CERTS
 import webob.exc
@@ -42,7 +42,8 @@ auth = AstakosClient(AUTH_URL, ADMIN_TOKEN)
 endpoints = {'identity': AUTH_URL}
 client_classes = {'identity': AstakosClient}
 
-for cls in (CycladesComputeClient, CycladesNetworkClient):
+for cls in (CycladesComputeClient, CycladesNetworkClient,
+            CycladesBlockStorageClient):
     service_type = cls.service_type
     endpoints[service_type] = auth.get_endpoint_url(service_type)
     client_classes[service_type] = cls
@@ -118,7 +119,7 @@ def call_kamaki(environ, start_response, *args, **kwargs):
 
 
 def _stringify_json_values(data):
-    """If a sinlge value is not a string, make it"""
+    """If a single value is not a string, make it"""
     if isinstance(data, dict):
         return dict((k, _stringify_json_values(v)) for k, v in data.items())
     if isinstance(data, list):
