@@ -264,6 +264,14 @@ fi
 echo
 echo
 
+echo "List all volumes"
+echo "Meaning: kamaki volume list"
+CMD="${BASE_CMD} $OCCI_ENDPOINT/volume"
+echo $CMD
+eval $CMD
+echo
+echo
+
 echo "Clean up"
 CMD="${BASE_CMD} -X DELETE ${VM_URL}"
 echo $CMD
