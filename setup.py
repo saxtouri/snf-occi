@@ -17,7 +17,7 @@ from setuptools import setup
 
 setup(
     name='snf-occi',
-    version='0.3',
+    version='0.4',
     description='OCCI to Openstack/Cyclades API bridge',
     url='http://code.grnet.gr/projects/snf-occi',
     license='GPLv3',
