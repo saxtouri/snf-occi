@@ -52,16 +52,18 @@ def snf_get_volume_info(cls, req, volume_id):
 
 def snf_create_volume(cls, req, name, size):
     """Synnefo: Create a volume"""
+    project_id = req.environ.get('HTTP_X_PROJECT_ID', None)
     req.environ['service_type'] = 'volume'
     req.environ['method_name'] = 'volumes_post'
 
-    if '.' in size:
-        size = str(int(float(size)))
-    else:
+    try:
         size = str(int(size))
+    except ValueError:
+        size = str(int(float(size)))
 
     req.environ['kwargs'] = {'size': size, 'display_name': name,
-                             'volume_type': '2'}
+                             'volume_type': '2',
+                             'project': project_id}
     response = req.get_response(cls.app)
     r = cls.get_from_response(response, "volume", {})
     return snf_get_volume_info(cls, req, r['id'])

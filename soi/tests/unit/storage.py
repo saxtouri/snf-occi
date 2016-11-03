@@ -78,13 +78,17 @@ def test_snf_get_volume(gr, gfr, _ovdn):
 def test_snf_create_volume(gr, gfr, gvi):
     """Test snf_create_volume method"""
     cls, req = fakes.DummyClass(), fakes.FakeReq()
-    name, size = 'OCCI Volume', '2'
+    project_id = 'a project id'
+    name, size = 'OCCI Volume', '100'
+    req.environ['HTTP_X_PROJECT_ID'] = project_id
     storage.snf_create_volume(cls, req, name, size)
     assert req.environ == dict(
+        HTTP_X_PROJECT_ID=project_id,
         service_type='volume',
         method_name='volumes_post',
         kwargs={'size': size, 'display_name': name,
-                'volume_type': '2'})
+                'volume_type': '2',
+                'project': project_id})
     gr.assert_called_once_with(cls.app)
     gfr.assert_called_once_with('my response', 'volume', {})
     gvi.assert_called_once_with(cls, req, 'some id')
@@ -94,7 +98,7 @@ def test_snf_create_volume(gr, gfr, gvi):
 def test_snf_delete_volume(gr):
     """Test snf_delete_volume """
     cls, req = fakes.DummyClass(), fakes.FakeReq()
-    volume_id = 'volume_id'
+    volume_id = 'a volume id'
     storage.snf_delete_volume(cls, req, volume_id)
     assert req.environ == dict(
         service_type='volume',
