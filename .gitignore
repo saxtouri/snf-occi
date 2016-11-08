@@ -1,6 +1,9 @@
 *.pyc
 *.egg-info
 *.*.swp
+*.py~
+*.*~
 _build
 build
 dist
+soi/.*.py.swo
