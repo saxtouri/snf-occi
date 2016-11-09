@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+from soi.config import VOLUME_TYPE
 
 
 def _openstackify_volumes_display_names(response):
@@ -62,7 +63,7 @@ def snf_create_volume(cls, req, name, size):
         size = str(int(float(size)))
 
     req.environ['kwargs'] = {'size': size, 'display_name': name,
-                             'volume_type': '2',
+                             'volume_type': str(VOLUME_TYPE),
                              'project': project_id}
     response = req.get_response(cls.app)
     r = cls.get_from_response(response, "volume", {})

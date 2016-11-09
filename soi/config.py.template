@@ -16,9 +16,20 @@
 #  Copy this file as config.py and fill in the appropriate values
 
 AUTH_URL = 'https://accounts.example.com/identity/v2.0'
+ADMIN_TOKEN = 'your_token'
+
+IGNORE_SSL = False
 CA_CERTS = '/etc/ssl/certs/ca-certificates.crt'
 KEYSTONE_URL = 'https://okeanos-astavoms.example.com'
 
 HOST = 'this-host.example.com or IP'
 PORT = '8080'
 PASTE_INI = '/home/user/snf-occi/ci/soi.ini'
+
+# Possible values (1,2)
+# Volume type=1, drbd
+# Volume type=2, archipelago
+VOLUME_TYPE = 2
+
+DISABLE_STORAGE_LINK_CREATION = False
+DISABLE_STORAGE_LINK_DELETION = False

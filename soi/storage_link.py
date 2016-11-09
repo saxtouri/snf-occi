@@ -12,11 +12,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+from soi import config
+import webob.exc
 
 
 def _openstackify_volumes_info(volumes):
     """Adjust server_id, device_index, volume_id to OpensStack"""
-
     for volume in volumes:
         volume['displayName'] = volume['display_name']
         for attachment in volume['attachments']:
@@ -33,6 +34,7 @@ def snf_get_all_volume_links(cls, req):
     response = req.get_response(cls.app)
     r = cls.get_from_response(response, "volumes", [])
     _openstackify_volumes_info(r)
+
     return r
 
 
@@ -49,6 +51,12 @@ def snf_get_server_volume_links(cls, req, server_id):
 def snf_create_server_volume_link(cls, req, server_id, volume_id,
                                   dev=None):
     """Synnefo: Attach a volume to a server"""
+
+    if config.DISABLE_STORAGE_LINK_CREATION:
+        msg = 'attaching a volume to a server'
+        raise webob.exc.HTTPNotImplemented(
+            explanation="Method for {0} is not supported".format(msg))
+
     project_id = req.environ.get('HTTP_X_PROJECT_ID', None)
 
     req.environ['service_type'] = 'compute'
@@ -64,6 +72,11 @@ def snf_create_server_volume_link(cls, req, server_id, volume_id,
 
 def snf_delete_server_volumes_link(cls, req, server_id, volume_id):
     """Synnefo: Delete a volume attachment"""
+    if config.DISABLE_STORAGE_LINK_DELETION:
+        msg = 'deleting a server`s volume link'
+        raise webob.exc.HTTPNotImplemented(
+            explanation="Method for {0} is not supported".format(msg))
+
     req.environ['service_type'] = 'compute'
     req.environ['method_name'] = 'volume_attachment_delete'
     req.environ['kwargs'] = {'server_id': server_id,

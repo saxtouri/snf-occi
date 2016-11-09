@@ -31,12 +31,16 @@ from kamaki.clients.astakos import AstakosClient
 from kamaki.clients.cyclades import (
     CycladesComputeClient, CycladesNetworkClient, CycladesBlockStorageClient)
 from kamaki.clients.utils import https
-from soi.config import AUTH_URL, CA_CERTS
+from soi.config import AUTH_URL, CA_CERTS, IGNORE_SSL
 import webob.exc
 
 #  endpoints are offered auth-free, so no need for an admin token
 ADMIN_TOKEN = ''
 https.patch_with_certs(CA_CERTS)
+
+if IGNORE_SSL:
+    https.patch_ignore_ssl()
+
 auth = AstakosClient(AUTH_URL, ADMIN_TOKEN)
 
 endpoints = {'identity': AUTH_URL}
