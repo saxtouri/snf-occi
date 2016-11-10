@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from soi.config import VOLUME_TYPE
+from soi.utils import check_activation
 
 
 def _openstackify_volumes_info(volumes):
@@ -25,6 +26,7 @@ def _openstackify_volumes_info(volumes):
             attachment['volumeId'] = attachment['volume_id']
 
 
+@check_activation
 def snf_get_volumes(cls, req):
     """Synnefo: list volumes"""
     req.environ['service_type'] = 'volume'
@@ -44,6 +46,7 @@ def _openstackify_volume_display_name(response):
     response['displayName'] = response['display_name']
 
 
+@check_activation
 def snf_get_volume_info(cls, req, volume_id):
     """Synnefo: Get volume info"""
     req.environ['service_type'] = 'volume'
@@ -55,6 +58,7 @@ def snf_get_volume_info(cls, req, volume_id):
     return r
 
 
+@check_activation
 def snf_create_volume(cls, req, name, size):
     """Synnefo: Create a volume"""
     project_id = req.environ.get('HTTP_X_PROJECT_ID', None)
@@ -74,6 +78,7 @@ def snf_create_volume(cls, req, name, size):
     return snf_get_volume_info(cls, req, r['id'])
 
 
+@check_activation
 def snf_delete_volume(cls, req, volume_id):
     """Synnefo:Delete a volume"""
     req.environ['service_type'] = 'volume'
