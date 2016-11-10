@@ -19,8 +19,20 @@ echo "Check vars ..."
 if [ -z "$OCCI_ENDPOINT" ]; then echo "E: OCCI_ENDPOINT not set"; exit 1; fi;
 echo "OCCI_ENDPOINT = ${OCCI_ENDPOINT}"
 
-if [ -z "$USER_PROXY" ]; then echo "E: USER_PROXY not set"; exit 1; fi;
-echo "USER_PROXY = ${USER_PROXY}"
+AUTH=""
+if [ -z "$USER_PROXY" ]; then
+    echo "W: USER_PROXY not set";
+    if [ -z "$TOKEN" ]; then
+        echo "E: TOKEN not set";
+        exit 1;
+    else
+        echo "TOKEN = ${TOKEN}";
+        AUTH="-n token --token ${TOKEN}"
+    fi;
+else
+    echo "USER_PROXY = ${USER_PROXY}"
+    AUTH="-n x509 -X --user-cred ${USER_PROXY}"
+fi;
 
 if [ -z "$OS_TPL" ]; then echo "E: OS_TPL not set"; exit 1; fi;
 echo "OS_TPL = ${OS_TPL}"
@@ -37,9 +49,10 @@ fi
 
 echo "Vars OK, run tests"
 echo
+echo
 
 
-BASE_CMD="occi ${XARGS} --endpoint ${OCCI_ENDPOINT} -n x509 -X --user-cred ${USER_PROXY}"
+BASE_CMD="occi ${XARGS} --endpoint ${OCCI_ENDPOINT} ${AUTH}"
 VM_INFO="/tmp/vm.info"
 
 echo "List OS templates"
@@ -48,12 +61,14 @@ CMD="${BASE_CMD} --action list --resource os_tpl"
 echo "$CMD"
 eval $CMD
 echo
+echo
 
 echo "List resource templates"
 echo "Meaning: kamaki flavor list"
 CMD="${BASE_CMD} --action list --resource resource_tpl"
 echo "$CMD"
 eval $CMD
+echo
 echo
 
 echo "Details on OS template"
@@ -62,12 +77,14 @@ CMD="${BASE_CMD} --action describe --resource os_tpl#${OS_TPL}"
 echo "$CMD"
 eval $CMD
 echo
+echo
 
 echo "Details on resource template"
 echo "Meaning: kamaki flavor info ${RESOURCE_TPL}"
 CMD="${BASE_CMD} --action describe --resource resource_tpl#${RESOURCE_TPL}"
 echo "$CMD"
 eval $CMD
+echo
 echo
 
 echo "Create a server instance"
@@ -80,12 +97,14 @@ echo "$CMD"
 VM_URL=$(eval $CMD)
 echo "VM URL: ${VM_URL}"
 echo
+echo
 
 echo "List server instances"
 echo "Meaning: kamaki server list"
 CMD="${BASE_CMD} --action list --resource compute"
 echo "$CMD"
 eval $CMD
+echo
 echo
 
 if [ -z "$VM_URL" ]; then
@@ -162,6 +181,7 @@ else
     eval $CMD;
 fi;
 echo
+echo
 
 echo "Check contextualization"
 echo
@@ -192,6 +212,7 @@ VM_URL=$(eval $CMD)
 echo "VM URL: ${VM_URL}"
 SUFFIX=(`echo ${VM_URL}|awk '{n=split($0,a,"/"); print "/"a[n-1]"/"a[n]}'`)
 echo
+echo
 
 echo "Wait for server to get up"
 CMD="${BASE_CMD} --action describe --resource ${SUFFIX} > ${VM_INFO}";
@@ -208,6 +229,7 @@ do
     eval $CMD;
     STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
 done;
+echo
 echo
 
 printf "Wait 16 seconds for the network |"

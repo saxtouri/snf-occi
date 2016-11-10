@@ -55,9 +55,11 @@ either when you RUN the container or while you are inside the container.
 ::
 
   OCCI_ENDPOINT
-  USER_PROXY
+  USER_PROXY or TOKEN
   OS_TPL
   RESOURCE_TPL
+
+The "rocci/storage.sh" script can run with only the first two variables set.
 
 For the "curl/compute.sh" you need a similar set of enviroment variables.
 
@@ -67,6 +69,8 @@ For the "curl/compute.sh" you need a similar set of enviroment variables.
   TOKEN
   OS_TPL
   RESOURCE_TPL
+
+The "curl/storage.sh" script can run with only the first two variables set.
 
 For instance, if you have a proxy, you may want to run something like:
 
@@ -80,5 +84,6 @@ For instance, if you have a proxy, you may want to run something like:
     -e RESOURCE_TPL="13"\
     -ti snf-occi-client:latest
 
-TIP: To test on the same host, run the command with the "--net host" argument
+TIP: To test on the same host (e.g. with a server running localy), run the
+command with the "--net host" argument
 

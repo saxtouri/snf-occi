@@ -19,57 +19,67 @@ echo "Check vars ..."
 if [ -z "$OCCI_ENDPOINT" ]; then echo "E: OCCI_ENDPOINT not set"; exit 1; fi;
 echo "OCCI_ENDPOINT = ${OCCI_ENDPOINT}"
 
-if [ -z "$TOKEN" ]; then echo "E: TOKEN not set"; exit 1; fi;
-echo "TOKEN = ${TOKEN}"
+AUTH=""
+if [ -z "$USER_PROXY" ]; then
+    echo "W: USER_PROXY not set";
+    if [ -z "$TOKEN" ]; then
+        echo "E: TOKEN not set";
+        exit 1;
+    else
+        echo "TOKEN = ${TOKEN}";
+        AUTH="-n token --token ${TOKEN}"
+    fi;
+else
+    echo "USER_PROXY = ${USER_PROXY}"
+    AUTH="-n x509 -X --user-cred ${USER_PROXY}"
+fi;
+
+
+if [ -z "$SNF_OCCI_DEBUG" ]; then
+    XARGS="";
+else 
+    XARGS="-d";
+fi;
 
 echo "Vars OK, run tests"
 echo
 
-if [ -z "$SNF_OCCI_DEBUG" ]; then
-    XARGS="-s";
-else 
-    XARGS="-v";
-fi
 
-BASE_CMD="curl ${XARGS} -H'X-Auth-Token: ${TOKEN}'"
+BASE_CMD="occi ${XARGS} --endpoint ${OCCI_ENDPOINT} ${AUTH}"
 
-
-echo "Create a volume"
-echo "Meaning: kamaki volume create --name \"My Test Volume\" \\"
+echo "Create a Volume"
+echo "Meaning: kamaki volume create --name \"My test volume\" \\"
 echo "    --size 10 --volume-type 2"
-CMD="${BASE_CMD} -X'POST' $OCCI_ENDPOINT/storage/ \
-    -H 'Category: storage; \
-        scheme=\"http://schemas.ogf.org/occi/infrastructure#\"; \
-        class=\"kind\"' \
-    -H 'X-OCCI-Attribute: occi.core.title=\"My Test Volume\"'
-    -H 'X-OCCI-Attribute: occi.storage.size=10'"
-echo $CMD
+CMD="${BASE_CMD} --action create --resource storage "
+CMD="${CMD} --attribute occi.core.title=\"My test volume\""
+CMD="${CMD} --attribute occi.storage.size=\"10\""
+echo "$CMD"
 VOLUME_URL=$(eval $CMD)
-echo ${VOLUME_URL}
+echo "${VM_URL}"
 VOLUME_ID=(`echo $VOLUME_URL|awk '{n=split($0,a,"/"); print a[n];}'`)
 echo
 echo
 
-echo "List volumes"
+echo "List Volumes"
 echo "Meaning: kamaki volume list"
-CMD="${BASE_CMD} $OCCI_ENDPOINT/storage/"
+CMD="${BASE_CMD} --action list --resource storage"
 echo "$CMD"
 eval $CMD
 echo
 echo
 
-echo "Get volume information"
+echo "Details on a Volume"
 echo "Meaning: kamaki volume info ${VOLUME_ID}"
-CMD="${BASE_CMD} $OCCI_ENDPOINT/storage/${VOLUME_ID}"
+CMD="${BASE_CMD} --action describe --resource /storage/${VOLUME_ID}"
 echo "$CMD"
 eval $CMD
 echo
 echo
 
-echo "Delete a volume"
-echo "Meaning: kamaki volume delete ${VOLUME_ID}"
-CMD="${BASE_CMD} -X'DELETE' $OCCI_ENDPOINT/storage/${VOLUME_ID}"
-echo "$CMD"
+
+echo "Clean up"
+CMD="${BASE_CMD} --action delete --resource /storage/${VOLUME_ID}"
+echo $CMD
 eval $CMD
 echo
 echo
