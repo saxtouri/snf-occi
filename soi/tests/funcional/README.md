@@ -7,7 +7,7 @@ Build the image
 
 This will build a new image, which can be pushed or kept local.
 
-Alternatively, you can, of course, use the grnet repository to build the image:
+Alternatively, you can use the grnet repository to build the image:
 
 ::
 
@@ -43,7 +43,13 @@ export SNF_OCCI_DEBUG=true
 
 Unset the variable for a less verbose execution
 
-To run the "run_functional_tests.sh" script, you must set some variables,
+There are two equivalent sets of functional tests prepared in two separate
+directories. The ones based on the rOCCI client are under `rocci` directory,
+the ones based on curl are under the `curl` directory. In the following we will
+assume you want to run the tests for "compute" (server) functionalities, but
+you should explore and run all tests.
+
+To run the "rocci/compute.sh" script, you must set some variables,
 either when you RUN the container or while you are inside the container.
 
 ::
@@ -53,7 +59,7 @@ either when you RUN the container or while you are inside the container.
   OS_TPL
   RESOURCE_TPL
 
-For the "run_curl_tests.sh" you need a similar set of enviroment variables.
+For the "curl/compute.sh" you need a similar set of enviroment variables.
 
 ::
 

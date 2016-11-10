@@ -131,8 +131,8 @@ environment variables:
   $ export OS_TPL="13"
   $ export RESOURCE_TPL="6f1f7205-cf4c-4b8c-ae77-7c419747bcbd"
 
-The USER_PROXY is only needed if you run the rOCCI-based "run_function_tests.sh",
-while TOKEN is only needed if you run the "run_curl_tests.sh" script.
+The USER_PROXY is only needed if you run the rOCCI-based "rocci/*.sh",
+while TOKEN is only needed if you run the "curl/*.sh" script.
 
 You can setup a docker client for testing. Follow the
 "soi/tests/functional/README.md" instructions and test the application with the
@@ -144,7 +144,7 @@ the container.
 Examples
 --------
 For the examples below we assume server is running on localhost (port 8080) and authentication token is $TOKEN. For the HTTP requests we are using **curl**. All
-these tests are also programmed in "soi/tests/functional/run_curl_tests.sh"
+these tests are also programmed in "soi/tests/functional/curl/"
 
 * Retrieve all registered Kinds, Actions and Mixins:
 
