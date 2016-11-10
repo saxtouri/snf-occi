@@ -82,7 +82,7 @@ echo
 echo
 
 STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' ${VM_INFO}`)
-WAIT=1
+WAIT=10
 while [ $STATE != 'active' ]
 do
     echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
@@ -106,7 +106,7 @@ echo "Check server state"
 echo $CMD
 eval $CMD
 STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' ${VM_INFO}`)
-WAIT=1
+WAIT=5
 while [ $STATE != 'inactive' ]
 do
     echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
@@ -129,11 +129,10 @@ echo "Check server state"
 echo $CMD
 eval $CMD
 STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' ${VM_INFO}`)
-WAIT=1
+WAIT=5
 while [ $STATE != 'active' ]
 do
-    echo "Server state is ${STATE}"
-    echo "wait ${WAIT}\" and check again"
+    echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
     sleep $WAIT
     let "WAIT++"
     eval $CMD
@@ -154,7 +153,7 @@ echo "Check server state"
 echo $CMD
 eval $CMD
 STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' ${VM_INFO}`)
-WAIT=1
+WAIT=5
 while [ $STATE != 'inactive' ]
 do
     echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
@@ -164,7 +163,7 @@ do
     STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' ${VM_INFO}`)
 done
 echo
-WAIT=1
+WAIT=5
 while [ $STATE != 'active' ]
 do
     echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
@@ -185,11 +184,28 @@ eval $CMD
 echo
 echo
 
+echo "Wait server to be destroyed"
+CMD="${BASE_CMD} ${VM_URL} > ${VM_INFO}"
+echo $CMD
+eval $CMD
+
+STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' ${VM_INFO}`)
+WAIT=10
+while [ $STATE == 'active' ]
+do
+    echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
+    sleep $WAIT
+    let "WAIT++"
+    eval $CMD
+    STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' ${VM_INFO}`)
+done
+echo
+
 
 echo "Test create with context (PPK auth)"
 echo "Meaning: kamaki server create --name \"My Test VM\" \\"
 echo "    --flavor-id ${RESOURCE_TPL} --image-id ${OS_TPL}"
-echo "    -p (`pwd`)/id_rsa.pub,/root/.ssh/authorized_keys,root,root,0600"
+echo "    -p `pwd`/id_rsa.pub,/root/.ssh/authorized_keys,root,root,0600"
 
 echo "Create a PPK pair:"
 PPK_DIR="/tmp"
@@ -204,6 +220,7 @@ echo $PUBLIC_KEY
 echo
 echo
 
+
 CMD="${BASE_CMD} -X'POST' $OCCI_ENDPOINT/compute \
     -H'Category: compute; scheme=\"http://schemas.ogf.org/occi/infrastructure#\"; class=\"kind\"' \
     -H'Content-Type: text/occi' \
@@ -215,6 +232,7 @@ CMD="${BASE_CMD} -X'POST' $OCCI_ENDPOINT/compute \
     -H'X-OCCI-Attribute: org.openstack.credentials.publickey.data=\"${PUBLIC_KEY}\"'"
 echo $CMD
 VM_URL=$(eval $CMD)
+echo $VM_URL
 VM_URL=(`echo $VM_URL|awk '{print $2;}'`)
 echo
 echo
@@ -226,7 +244,7 @@ echo $CMD
 eval $CMD
 
 STATE=(`awk '/occi.compute.state/{n=split($0,a,"\""); print a[2];}' ${VM_INFO}`)
-WAIT=1
+WAIT=10
 while [ $STATE != 'active' ]
 do
     echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
@@ -253,7 +271,9 @@ echo
 
 echo "Check PPK authentication"
 VM_ID=(`echo ${VM_URL}|awk '/\//{n=split($0,a,"/"); print a[n]; }'`)
-CMD="scp -o \"StrictHostKeyChecking no\" -i ${PPK_DIR}/${PPK} root@snf-${VM_ID}.vm.okeanos.grnet.gr:/root/.ssh/authorized_keys ${PPK_DIR}/${PPK}.downloaded"
+CMD="scp -o \"StrictHostKeyChecking no\" -i ${PPK_DIR}/${PPK} \
+    root@snf-${VM_ID}.vm.okeanos.grnet.gr:/root/.ssh/authorized_keys \
+    ${PPK_DIR}/${PPK}.downloaded"
 echo $CMD
 eval $CMD
 if [ -f ${PPK_DIR}/${PPK}.downloaded ]; then
@@ -261,14 +281,6 @@ if [ -f ${PPK_DIR}/${PPK}.downloaded ]; then
 else
     echo "PPK authentication FAILED"
 fi
-echo
-echo
-
-echo "List all volumes"
-echo "Meaning: kamaki volume list"
-CMD="${BASE_CMD} $OCCI_ENDPOINT/volume"
-echo $CMD
-eval $CMD
 echo
 echo
 

@@ -119,7 +119,7 @@ else
     eval $CMD;
     STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`)
 
-    WAIT=1;
+    WAIT=10;
     while [ $STATE != 'active' ]
     do
         echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
@@ -136,7 +136,7 @@ else
     ACMD="${BASE_CMD} --resource ${SUFFIX} --action trigger --trigger-action ${ACTION}"
     echo "$ACMD"
     eval $ACMD
-    WAIT=1;
+    WAIT=5;
     while [ $STATE != 'inactive' ]
     do
         echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
@@ -154,7 +154,7 @@ else
     ACMD="${BASE_CMD} --resource ${SUFFIX} --action trigger --trigger-action ${ACTION}"
     echo "$ACMD"
     eval $ACMD
-    WAIT=1;
+    WAIT=5;
     while [ $STATE != 'active' ]
     do
         echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
@@ -174,11 +174,45 @@ else
     eval $ACMD
     echo
 
+    WAIT=5;
+    while [ $STATE == 'active' ]
+    do
+        echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
+        sleep $WAIT;
+        let "WAIT++";
+        eval $CMD;
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
+    done;
+    echo "Server state is $STATE"
+    WAIT=5;
+    while [ $STATE != 'active' ]
+    do
+        echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
+        sleep $WAIT;
+        let "WAIT++";
+        eval $CMD;
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
+    done;
+    echo "Server state is $STATE"
+    echo
+
     echo "Destroy server instance ${SUFFIX}";
     echo "Meaning: kamaki server delete ${SERVER_URL}";
     CMD="${BASE_CMD} --action delete --resource ${SUFFIX}";
     echo "$CMD";
     eval $CMD;
+
+    WAIT=5;
+    while [ $STATE == 'active' ]
+    do
+        echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
+        sleep $WAIT;
+        let "WAIT++";
+        eval $CMD;
+        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
+    done;
+    echo "Server state is $STATE"
+    echo
 fi;
 echo
 echo
@@ -220,7 +254,7 @@ echo "$CMD";
 eval $CMD;
 STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`)
 
-WAIT=1;
+WAIT=10;
 while [ $STATE != 'active' ]
 do
     echo "Server state is ${STATE}, wait ${WAIT}\" and check again"

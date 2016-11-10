@@ -171,6 +171,12 @@ def snf_create_server(cls, req, name, image, flavor, **kwargs):
         body['personality'] = personality
 
     body.update(kwargs)
+
+    if not body.get('networks', None):
+        body.pop('networks', None)
+    if not body.get('block_device_mapping_v2', None):
+        body.pop('block_device_mapping_v2', None)
+
     req.environ['kwargs'] = dict(json_data=dict(server=body))
     req.environ['service_type'] = 'compute'
     req.environ['method_name'] = 'servers_post'
