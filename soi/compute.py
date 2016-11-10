@@ -231,11 +231,13 @@ function_map = {
     'get_flavor': snf_get_flavor,
     'get_images': snf_get_images,
     'get_image': snf_get_image,
-    'get_floating_ip_pools': empty_list_200,
     'get_server_volumes_link': snf_get_server_volumes_link,
     '_get_ports': snf_get_server_net_attachments,
     'delete': snf_delete_server,
     'create_server': snf_create_server,
     'run_action': snf_run_action,
-    'keypair_create': keypair_register
+    'keypair_create': keypair_register,
+    # TODO: Implement these when you do networks
+    'get_floating_ips': empty_list_200,  # Helps in server delete
+    'get_floating_ip_pools': empty_list_200,
 }

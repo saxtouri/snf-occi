@@ -89,7 +89,7 @@ echo
 
 echo "Create a server instance"
 echo "Meaning: kamaki server create --name \"OCCI test VM\" \\"
-echo "    --flavor-id <ID of c2r2048d40drb> --image-id <ID of ${OS_TPL}>"
+echo "    --flavor-id ${RESOURCE_TPL} --image-id ${OS_TPL}"
 CMD="${BASE_CMD} --action create --resource compute "
 CMD="${CMD} --attribute occi.core.title=\"OCCI test VM\""
 CMD="${CMD} --mixin os_tpl#${OS_TPL} --mixin resource_tpl#${RESOURCE_TPL}"
@@ -174,16 +174,8 @@ else
     eval $ACMD
     echo
 
-    WAIT=5;
-    while [ $STATE == 'active' ]
-    do
-        echo "Server state is ${STATE}, wait ${WAIT}\" and check again"
-        sleep $WAIT;
-        let "WAIT++";
-        eval $CMD;
-        STATE=(`awk '/occi.compute.state/{n=split($0,a," = "); print a[2];}' ${VM_INFO}`);
-    done;
-    echo "Server state is $STATE"
+    sleep 10
+
     WAIT=5;
     while [ $STATE != 'active' ]
     do
@@ -198,9 +190,9 @@ else
 
     echo "Destroy server instance ${SUFFIX}";
     echo "Meaning: kamaki server delete ${SERVER_URL}";
-    CMD="${BASE_CMD} --action delete --resource ${SUFFIX}";
-    echo "$CMD";
-    eval $CMD;
+    ACMD="${BASE_CMD} --action delete --resource ${SUFFIX}";
+    echo "$ACMD";
+    eval $ACMD;
 
     WAIT=5;
     while [ $STATE == 'active' ]
@@ -236,7 +228,7 @@ echo
 echo "Create a server instance with PPK"
 echo "Meaning: kamaki server create --name \"OCCI test VM\" \\"
 echo "    --flavor-id ${RESOURCE_TPL} --image-id ${OS_TPL} \\"
-echo "    -p (`pwd`)/id_rsa.pub,/root/.ssh/authorized_keys,root,root,0600"
+echo "    -p `pwd`/id_rsa.pub,/root/.ssh/authorized_keys,root,root,0600"
 CMD="${BASE_CMD} --action create --resource compute"
 CMD="${CMD} --attribute occi.core.title=\"OCCI test VM\""
 CMD="${CMD} --mixin os_tpl#${OS_TPL} --mixin resource_tpl#${RESOURCE_TPL}"

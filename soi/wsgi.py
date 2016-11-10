@@ -17,7 +17,7 @@ from ooi.wsgi import OCCIMiddleware
 from ooi.api.helpers import OpenStackHelper
 from soi.config import KEYSTONE_URL
 from soi.synnefo import AstakosClient, AUTH_URL
-from soi import utils, compute, storage, storage_link
+from soi import utils, compute, storage, storage_link, network
 from kamaki.clients import ClientError
 
 
