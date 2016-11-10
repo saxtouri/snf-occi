@@ -12,15 +12,19 @@
 #
 # You should have received a copy of the GNU General Public License
 
-from soi import utils
+from soi import utils, config
 from mock import patch
 from soi.tests import fakes
+import webob.exc
+from nose.tools import assert_raises
 
 
 def test_patch_class_methods():
     """Test utils.patch_class_methods"""
     class DummyClass:
+
         """use it for testing"""
+
         def a_method(self, an_arg):
             """a method"""
 
@@ -48,3 +52,17 @@ def test_empty_list_200(gr, gfr):
     assert r == 'g f r'
     gfr.assert_called_once_with('my response', 'empty list', [])
     gr.assert_called_once_with(cls.app)
+
+
+def test_check_activation():
+    """Test check activation method"""
+
+    @utils.check_activation
+    def DummyMethod():
+        pass
+
+    func_full_name = DummyMethod.__module__ + '.' + DummyMethod.__name__
+    DISABLED_METHODS = (func_full_name,)
+    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
+
+    assert_raises(webob.exc.HTTPNotImplemented, DummyMethod)

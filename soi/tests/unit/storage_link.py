@@ -15,8 +15,6 @@
 from soi.tests import fakes
 from soi import storage_link, config
 from mock import patch
-import webob.exc
-from nose.tools import assert_raises
 
 
 @patch('soi.tests.fakes.DummyClass.get_from_response')
@@ -37,19 +35,6 @@ def test_snf_get_server_volume_links(gr, gfr):
     )
     gr.assert_called_once_with(cls.app)
     gfr.assert_called_once_with('my response', 'volumeAttachments', [])
-
-
-def test_snf_get_server_volume_links_disabled():
-    """Test snf_get_server_volume_links method"""
-
-    DISABLED_METHODS = ('snf_get_server_volume_links')
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
-
-    cls, req = fakes.DummyClass(), fakes.FakeReq()
-    server_id = '1234'
-    assert_raises(webob.exc.HTTPNotImplemented,
-                  storage_link.snf_get_server_volume_links, cls, req,
-                  server_id)
 
 
 @patch('soi.tests.fakes.DummyClass.get_from_response')
@@ -81,23 +66,6 @@ def test_snf_create_server_volume_link(gr, gfr):
     gfr.assert_called_once_with('my response', 'volumeAttachment', {})
 
 
-def test_snf_create_server_volume_link_disabled():
-    """Test snf_create_server_volume_link method disabled"""
-    DISABLED_METHODS = ('snf_create_server_volume_link')
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
-
-    cls, req = fakes.DummyClass(), fakes.FakeReq()
-    server_id = '1234'
-    volume_id = '666'
-    dev = ""
-    project_id = 'a project id'
-    req.environ['HTTP_X_PROJECT_ID'] = project_id
-
-    assert_raises(webob.exc.HTTPNotImplemented,
-                  storage_link.snf_create_server_volume_link, cls, req,
-                  server_id, volume_id, dev)
-
-
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_delete_server_volumes_link(gr):
     """Test snf_delete_server_volumes_link method"""
@@ -116,16 +84,3 @@ def test_snf_delete_server_volumes_link(gr):
                 'attachment_id': volume_id}
     )
     gr.assert_called_once_with(cls.app)
-
-
-def test_snf_delete_server_volumes_link_disabled():
-    """Test snf_delete_server_volumes_link method"""
-    DISABLED_METHODS = ('snf_delete_server_volumes_link')
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
-
-    cls, req = fakes.DummyClass(), fakes.FakeReq()
-    server_id = '1234'
-    volume_id = '666'
-    assert_raises(webob.exc.HTTPNotImplemented,
-                  storage_link.snf_delete_server_volumes_link, cls, req,
-                  server_id, volume_id)
