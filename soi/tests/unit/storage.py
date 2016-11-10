@@ -16,6 +16,9 @@ from soi.tests import fakes
 from soi import storage, config
 from mock import patch
 
+DISABLED_METHODS = ()
+setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
+
 
 def test_openstackify_volumes_info():
     """Test _openstackify_volumes_info helper method"""
@@ -67,8 +70,7 @@ def test_openstackify_volumes_info():
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_get_volumes(gr, gfr, _ovdns):
     """Test snf_get_volumes method"""
-    DISABLED_METHODS = ()
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
+
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     storage.snf_get_volumes(cls, req)
     assert req.environ == dict(
@@ -94,8 +96,7 @@ def test_openstackify_volume_display_name():
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_get_volume(gr, gfr, _ovdn):
     """Test snd_get_volume method"""
-    DISABLED_METHODS = ()
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
+
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     volume_id = 'volume_id'
     storage.snf_get_volume_info(cls, req, volume_id)
@@ -115,8 +116,7 @@ def test_snf_get_volume(gr, gfr, _ovdn):
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_create_volume(gr, gfr, gvi):
     """Test snf_create_volume method"""
-    DISABLED_METHODS = ()
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
+
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     project_id = 'a project id'
     name, size = 'OCCI Volume', '100'
@@ -137,8 +137,7 @@ def test_snf_create_volume(gr, gfr, gvi):
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_delete_volume(gr):
     """Test snf_delete_volume """
-    DISABLED_METHODS = ()
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
+
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     volume_id = 'a volume id'
     storage.snf_delete_volume(cls, req, volume_id)

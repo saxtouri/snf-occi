@@ -13,9 +13,12 @@
 # You should have received a copy of the GNU General Public License
 
 from soi.tests import fakes
-from soi import compute
+from soi import compute, config
 from mock import patch
 from base64 import b64encode
+
+DISABLED_METHODS = ()
+setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
 
 
 @patch('soi.tests.fakes.DummyClass.get_from_response', return_value='g f r')
@@ -445,6 +448,7 @@ def test_snf_create_server_with_full_context(gr, gfr, _oa, gp, snfci):
 @patch('soi.tests.fakes.FakeReq.get_response')
 def test_snf_delete_server(gr):
     """Test snf_delete_server"""
+
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     compute.snf_delete_server(cls, req, 'my server id')
     assert req.environ == dict(

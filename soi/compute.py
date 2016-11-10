@@ -16,8 +16,9 @@ from base64 import b64encode
 import webob.exc
 from soi.utils import empty_list_200
 from os.path import join
+from soi.utils import check_activation
 
-
+@check_activation
 def snf_index(cls, req):
     """Synnefo: list servers"""
     req.environ['service_type'] = 'compute'
@@ -26,6 +27,7 @@ def snf_index(cls, req):
     return cls.get_from_response(response, "servers", [])
 
 
+@check_activation
 def snf_get_flavors(cls, req):
     """Synnefo: list flavors"""
     req.environ['service_type'] = 'compute'
@@ -35,6 +37,7 @@ def snf_get_flavors(cls, req):
     return cls.get_from_response(response, 'flavors', [])
 
 
+@check_activation
 def snf_get_images(cls, req):
     """Synnefo: list images"""
     req.environ['service_type'] = 'compute'
@@ -56,6 +59,7 @@ def _openstackify_addresses(addresses, attachments):
             addr.setdefault('OS-EXT-IPS-MAC:mac_addr', mac_addr)
 
 
+@check_activation
 def snf_get_server(cls, req, server_id):
     """Synnefo: server info <server_id>"""
     req.environ['service_type'] = 'compute'
@@ -67,6 +71,7 @@ def snf_get_server(cls, req, server_id):
     return r
 
 
+@check_activation
 def snf_get_flavor(cls, req, flavor_id):
     """Synnefo: flavor info <flavor_id>"""
     req.environ['service_type'] = 'compute'
@@ -76,6 +81,7 @@ def snf_get_flavor(cls, req, flavor_id):
     return cls.get_from_response(response, "flavor", {})
 
 
+@check_activation
 def snf_get_image(cls, req, image_id):
     """Synnefo: flavor info <image_id>"""
     req.environ['service_type'] = 'compute'
@@ -85,6 +91,7 @@ def snf_get_image(cls, req, image_id):
     return cls.get_from_response(response, "image", {})
 
 
+@check_activation
 def snf_get_server_volumes_link(cls, req, server_id):
     """Synnefo: server attachments <server_id>"""
     req.environ['service_type'] = 'compute'
@@ -107,6 +114,7 @@ def _openstackify_net_attachments(attachments):
             a['fixed_ips'] = fixed_ips
 
 
+@check_activation
 def snf_get_server_net_attachments(cls, req, compute_id):
     """Adjust server-nics to os-interface format"""
     req.environ['service_type'] = 'compute'
@@ -140,6 +148,7 @@ def _get_personality(image, public_key):
     return personality
 
 
+@check_activation
 def snf_create_server(cls, req, name, image, flavor, **kwargs):
     """Synnefo: create a new VM"""
     project = req.environ.get('HTTP_X_PROJECT_ID', None)
@@ -173,6 +182,7 @@ def snf_create_server(cls, req, name, image, flavor, **kwargs):
     return r
 
 
+@check_activation
 def snf_delete_server(cls, req, server_id):
     """Synnefo: delete server"""
     req.environ['service_type'] = 'compute'
@@ -181,6 +191,7 @@ def snf_delete_server(cls, req, server_id):
     req.get_response(cls.app)
 
 
+@check_activation
 def snf_run_action(cls, req, action, server_id):
     """Synnefo: server actions"""
     try:
@@ -199,6 +210,7 @@ def snf_run_action(cls, req, action, server_id):
     req.get_response(cls.app)
 
 
+@check_activation
 def keypair_register(cls, req, name, public_key):
     """Put public key in req.environ['public_keys'], with name as key"""
     public_keys = req.environ.get('soi:public_keys', {})
