@@ -13,17 +13,17 @@
 # You should have received a copy of the GNU General Public License
 
 from soi.tests import fakes
-from soi import storage_link, config
+from soi import storage_link
+from soi.tests.utils import clear_disabled_methods_list
 from mock import patch
+
+clear_disabled_methods_list()
 
 
 @patch('soi.tests.fakes.DummyClass.get_from_response')
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_get_server_volume_links(gr, gfr):
     """Test snf_get_server_volume_links method"""
-
-    DISABLED_METHODS = ()
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
 
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     server_id = '1234'
@@ -41,9 +41,6 @@ def test_snf_get_server_volume_links(gr, gfr):
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_create_server_volume_link(gr, gfr):
     """Test snf_create_server_volume_link method"""
-
-    DISABLED_METHODS = ()
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
 
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     server_id = '1234'
@@ -69,8 +66,6 @@ def test_snf_create_server_volume_link(gr, gfr):
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_delete_server_volumes_link(gr):
     """Test snf_delete_server_volumes_link method"""
-    DISABLED_METHODS = ()
-    setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
 
     cls, req = fakes.DummyClass(), fakes.FakeReq()
     server_id = '1234'

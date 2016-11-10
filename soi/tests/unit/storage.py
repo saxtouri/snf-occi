@@ -13,11 +13,11 @@
 # You should have received a copy of the GNU General Public License
 
 from soi.tests import fakes
-from soi import storage, config
+from soi import storage
+from soi.tests.utils import clear_disabled_methods_list
 from mock import patch
 
-DISABLED_METHODS = ()
-setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
+clear_disabled_methods_list()
 
 
 def test_openstackify_volumes_info():

@@ -13,12 +13,12 @@
 # You should have received a copy of the GNU General Public License
 
 from soi.tests import fakes
-from soi import compute, config
+from soi import compute
+from soi.tests.utils import clear_disabled_methods_list
 from mock import patch
 from base64 import b64encode
 
-DISABLED_METHODS = ()
-setattr(config, 'DISABLED_METHODS', DISABLED_METHODS)
+clear_disabled_methods_list()
 
 
 @patch('soi.tests.fakes.DummyClass.get_from_response', return_value='g f r')
