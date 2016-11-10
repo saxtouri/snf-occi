@@ -15,21 +15,25 @@
 from soi.config import VOLUME_TYPE
 
 
-def _openstackify_volumes_display_names(response):
-    """Add a key called 'displayName'(this is used by OpenStack) and
-    place the value of Synnefo's response key (display_name)"""
-
-    for volume_info in response:
-        volume_info['displayName'] = volume_info['display_name']
+def _openstackify_volumes_info(volumes):
+    """Adjust server_id, device_index, volume_id to OpensStack"""
+    for volume in volumes:
+        volume['displayName'] = volume['display_name']
+        for attachment in volume['attachments']:
+            attachment['serverId'] = attachment['server_id']
+            attachment['device'] = attachment['device_index']
+            attachment['volumeId'] = attachment['volume_id']
 
 
 def snf_get_volumes(cls, req):
     """Synnefo: list volumes"""
     req.environ['service_type'] = 'volume'
     req.environ['method_name'] = 'volumes_get'
+    req.environ['kwargs'] = {'detail': True}
     response = req.get_response(cls.app)
     r = cls.get_from_response(response, "volumes", [])
-    _openstackify_volumes_display_names(r)
+    _openstackify_volumes_info(r)
+
     return r
 
 

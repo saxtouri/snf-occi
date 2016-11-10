@@ -31,5 +31,4 @@ PASTE_INI = '/home/user/snf-occi/ci/soi.ini'
 # Volume type=2, archipelago
 VOLUME_TYPE = 2
 
-DISABLE_STORAGE_LINK_CREATION = False
-DISABLE_STORAGE_LINK_DELETION = False
+DISABLED_METHOD = ()

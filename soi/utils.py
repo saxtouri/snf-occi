@@ -12,6 +12,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+from functools import wraps
+import webob.exc
+import config
 
 
 def patch_class_methods(cls, function_map):
@@ -29,3 +32,16 @@ def empty_list_200(cls, req):
     req.environ['method_name'] = 'empty_list'
     response = req.get_response(cls.app)
     return cls.get_from_response(response, 'empty list', [])
+
+
+def check_activation(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        disabled_methods = getattr(config, 'DISABLED_METHODS', None)
+        func_full_name = func.__module__ + '.' + func.__name__
+        if disabled_methods and func_full_name in disabled_methods:
+            raise webob.exc.HTTPNotImplemented(
+                explanation="Method: {0} is disabled".
+                format(func_full_name))
+        return func(*args, **kwargs)
+    return wrapper

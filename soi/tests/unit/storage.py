@@ -17,20 +17,52 @@ from soi import storage
 from mock import patch
 
 
-def test_openstackify_volumes_display_names():
-    """Test _openstackify_volumes_display_names helper method"""
-    response_result = [{'display_name': 'boot volume', 'id': '5609', },
-                       {'display_name': None, 'id': '67712'}]
-    openstackified_result = [{'display_name': 'boot volume',
-                              'displayName': 'boot volume', 'id': '5609'},
-                             {'display_name': None, 'displayName': None,
-                              'id': '67712'}]
+def test_openstackify_volumes_info():
+    """Test _openstackify_volumes_info helper method"""
+    volumes_before = [{'status': 'in_use',
+                       'user_id': '3141d95c-81fb-472f-a31a-acb4f6998b06',
+                       'display_name': 'name1',
+                       'attachments': [{'server_id': '9499',
+                                        'device_index': 0,
+                                        'volume_id': '5609'}]},
+                      {'status': 'in_use',
+                       'user_id': '3141d95c-81fb-472f-a31a-acb4f6998b06',
+                       'display_name': 'name2',
+                       'attachments': [{'server_id': '681849',
+                                        'device_index': 0,
+                                        'volume_id': '67712'}]
+                       }]
 
-    storage._openstackify_volumes_display_names(response_result)
-    assert response_result == openstackified_result
+    volumes_after = [{'status': 'in_use',
+                      'user_id': '3141d95c-81fb-472f-a31a-acb4f6998b06',
+                      'display_name': 'name1',
+                      'displayName': 'name1',
+                      'attachments': [{
+                          'server_id': '9499',
+                          'serverId': '9499',
+                          'device_index': 0,
+                          'device': 0,
+                          'volume_id': '5609',
+                          'volumeId': '5609'
+                      }]},
+                     {'status': 'in_use',
+                      'user_id': '3141d95c-81fb-472f-a31a-acb4f6998b06',
+                      'display_name': 'name2',
+                      'displayName': 'name2',
+                      'attachments': [{
+                          'server_id': '681849',
+                          'device_index': 0,
+                          'volume_id': '67712',
+                          'serverId': '681849',
+                          'device': 0,
+                          'volumeId': '67712'
+                      }]
+                      }]
+    storage._openstackify_volumes_info(volumes_before)
+    assert volumes_before == volumes_after
 
 
-@patch('soi.storage._openstackify_volumes_display_names')
+@patch('soi.storage._openstackify_volumes_info')
 @patch('soi.tests.fakes.DummyClass.get_from_response', return_value='g f r')
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_get_volumes(gr, gfr, _ovdns):
@@ -39,7 +71,9 @@ def test_snf_get_volumes(gr, gfr, _ovdns):
     storage.snf_get_volumes(cls, req)
     assert req.environ == dict(
         service_type='volume',
-        method_name='volumes_get')
+        method_name='volumes_get',
+        kwargs={'detail': True}
+    )
     gr.assert_called_once_with(cls.app)
     gfr.assert_called_once_with('my response', 'volumes', [])
     _ovdns.assert_called_once_with('g f r')

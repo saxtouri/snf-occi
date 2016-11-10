@@ -12,32 +12,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-from soi import config
-import webob.exc
+from soi.utils import check_activation
 
 
-def _openstackify_volumes_info(volumes):
-    """Adjust server_id, device_index, volume_id to OpensStack"""
-    for volume in volumes:
-        volume['displayName'] = volume['display_name']
-        for attachment in volume['attachments']:
-            attachment['serverId'] = attachment['server_id']
-            attachment['device'] = attachment['device_index']
-            attachment['volumeId'] = attachment['volume_id']
-
-
-def snf_get_all_volume_links(cls, req):
-    """Synnefo: get all volume attachments """
-    req.environ['service_type'] = 'volume'
-    req.environ['method_name'] = 'volumes_get'
-    req.environ['kwargs'] = {'detail': True}
-    response = req.get_response(cls.app)
-    r = cls.get_from_response(response, "volumes", [])
-    _openstackify_volumes_info(r)
-
-    return r
-
-
+@check_activation
 def snf_get_server_volume_links(cls, req, server_id):
     """Synnefo: Get volumes attached to a server"""
     req.environ['service_type'] = 'compute'
@@ -48,14 +26,10 @@ def snf_get_server_volume_links(cls, req, server_id):
     return r
 
 
+@check_activation
 def snf_create_server_volume_link(cls, req, server_id, volume_id,
                                   dev=None):
     """Synnefo: Attach a volume to a server"""
-
-    if config.DISABLE_STORAGE_LINK_CREATION:
-        msg = 'attaching a volume to a server'
-        raise webob.exc.HTTPNotImplemented(
-            explanation="Method for {0} is not supported".format(msg))
 
     project_id = req.environ.get('HTTP_X_PROJECT_ID', None)
 
@@ -70,13 +44,9 @@ def snf_create_server_volume_link(cls, req, server_id, volume_id,
     return r
 
 
+@check_activation
 def snf_delete_server_volumes_link(cls, req, server_id, volume_id):
     """Synnefo: Delete a volume attachment"""
-    if config.DISABLE_STORAGE_LINK_DELETION:
-        msg = 'deleting a server`s volume link'
-        raise webob.exc.HTTPNotImplemented(
-            explanation="Method for {0} is not supported".format(msg))
-
     req.environ['service_type'] = 'compute'
     req.environ['method_name'] = 'volume_attachment_delete'
     req.environ['kwargs'] = {'server_id': server_id,
@@ -85,7 +55,6 @@ def snf_delete_server_volumes_link(cls, req, server_id, volume_id):
 
 
 function_map = {
-    'get_volumes': snf_get_all_volume_links,
     'get_server_volumes_link': snf_get_server_volume_links,
     'create_server_volumes_link': snf_create_server_volume_link,
     'delete_server_volumes_link': snf_delete_server_volumes_link,
