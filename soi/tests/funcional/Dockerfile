@@ -20,9 +20,9 @@
 
 FROM egifedcloud/fedcloud-userinterface:latest
 MAINTAINER Stavros Sachtouris <saxtouri@grnet.gr>
-RUN apt update && apt install ca-policy-egi-core curl openssh-client -y
+RUN sudo apt update && sudo apt install ca-policy-egi-core curl openssh-client -y
 
 COPY curl /data/curl
 COPY rocci /data/rocci
 COPY run.sh /data/
-CMD ["/bin/bash", "/data/run.sh"]
+CMD ["/usr/bin/sudo", "/bin/bash", "/data/run.sh"]
