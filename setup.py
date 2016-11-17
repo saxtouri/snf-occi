@@ -17,7 +17,7 @@ from setuptools import setup
 
 setup(
     name='snf-occi',
-    version='0.4',
+    version='0.5',
     description='OCCI to Openstack/Cyclades API bridge',
     url='http://code.grnet.gr/projects/snf-occi',
     license='GPLv3',
@@ -26,5 +26,5 @@ setup(
         [paste.app_factory]
         snf_occi_app=soi:main
         ''',
-    install_requires=['kamaki', 'ooi==0.3.2', ]
+    install_requires=['kamaki', 'ooi', ]
 )
