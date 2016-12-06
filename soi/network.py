@@ -27,7 +27,6 @@ def _openstackify_network_response(nets, extended=False):
 
 def _snf_get_subnet(cls, req, id):
     """Synnefo get subnet from a network method"""
-    """Synnefo network listing method"""
     req.environ['service_type'] = 'network'
     req.environ['method_name'] = 'subnets_get'
     req.environ['kwargs'] = {'subnet_id': id}
@@ -75,7 +74,7 @@ def snf_delete_network(cls, req, id):
     """Synnefo delete network method"""
     req.environ['service_type'] = 'network'
     req.environ['method_name'] = 'networks_delete'
-    req.environ['kwargs'] = {'network_id': id}
+    req.environ['kwargs'] = {'network_id': id, 'success': (204,)}
     req.get_response(cls.app)
 
 
@@ -113,10 +112,18 @@ def snf_create_network(cls, req, name, cidr,
     req.environ['kwargs'] = {'json_data': data, 'success': 201}
     response = req.get_response(cls.app)
     r = cls.get_from_response(response, "network", {})
-    _snf_create_subnet(cls, req, network_id=r['id'], cidr=cidr,
-                       name=name + " subnet", gateway_ip=gateway,
-                       ipv6=True if ip_version == 6 else False)
-    return snf_show_network(cls, req, r['id'])
+
+    try:
+        _snf_create_subnet(cls, req, network_id=r['id'],
+                           cidr=cidr, name=name +
+                           " subnet",
+                           gateway_ip=gateway, ipv6=True
+                           if ip_version == 6 else False)
+
+        return snf_show_network(cls, req, r['id'])
+    except Exception as x:
+        snf_delete_network(cls, req, r['id'])
+        raise x
 
 
 function_map = {
