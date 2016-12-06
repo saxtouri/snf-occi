@@ -132,7 +132,7 @@ def test_snf_delete_network(gr):
     assert req.environ == dict(
         service_type='network',
         method_name='networks_delete',
-        kwargs={'network_id': net_id}
+        kwargs={'network_id': net_id, 'success': (204,)}
 
     )
     gr.assert_called_once_with(cls.app)
