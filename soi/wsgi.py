@@ -17,7 +17,7 @@ from ooi.wsgi import OCCIMiddleware
 from ooi.api.helpers import OpenStackHelper
 from soi.config import KEYSTONE_URL
 from soi.synnefo import AstakosClient, AUTH_URL
-from soi import utils, compute, storage, storage_link, network
+from soi import utils, compute, storage, storage_link, network, network_links
 from kamaki.clients import ClientError
 
 
@@ -25,6 +25,7 @@ utils.patch_class_methods(OpenStackHelper, compute.function_map)
 utils.patch_class_methods(OpenStackHelper, storage.function_map)
 utils.patch_class_methods(OpenStackHelper, storage_link.function_map)
 utils.patch_class_methods(OpenStackHelper, network.function_map)
+utils.patch_class_methods(OpenStackHelper, network_links.function_map)
 
 
 REDIRECT_MSG = '401 - redirect to: {URL}'
