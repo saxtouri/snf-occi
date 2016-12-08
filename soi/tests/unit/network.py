@@ -60,7 +60,8 @@ subnet_info = {'ip_version': u'6', 'cidr': u'2001:648:2ffc:1226::/64',
                'gateway_ip': u'2001:648:2ffc:1226::1'}
 
 
-@patch('soi.tests.fakes.DummyClass.get_from_response', return_value=subnet_info)
+@patch('soi.tests.fakes.DummyClass.get_from_response',
+       return_value=subnet_info)
 @patch('soi.tests.fakes.FakeReq.get_response', return_value='my response')
 def test_snf_get_subnet(gr, gfr):
     """Test snf_get_subnet method"""

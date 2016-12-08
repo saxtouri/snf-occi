@@ -14,6 +14,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from soi.utils import check_activation
+from soi.network import snf_show_network
+from ooi.api.helpers import OpenStackHelper
+from ooi import exception
 
 
 def _openstackify_port_response(data):
@@ -62,7 +65,123 @@ def snf_get_ports(cls, req, device_id):
     return filtered_data
 
 
+def _snf_create_floating_ip(cls, req):
+    """Synnefo create floating ip method"""
+    req.environ['service_type'] = 'network'
+    req.environ['method_name'] = 'floatingips_post'
+
+    project_id = req.environ['HTTP_X_PROJECT_ID']
+    data = {'floatingip': {'floating_network_id': None,
+                           'floating_ip_address': '',
+                           'project': project_id}}
+
+    req.environ['kwargs'] = {'success': 200, 'json_data': data}
+    response = req.get_response(cls.app)
+    r = cls.get_from_response(response, "floatingip", {})
+    return r
+
+
+def _snf_create_port_public_net(cls, req, network_id, device_id, fixed_ip):
+    """Synnefo create port between a public net and a server"""
+    req.environ['service_type'] = 'network'
+    req.environ['method_name'] = 'ports_post'
+    data = {'port': {'network_id': network_id, 'device_id': device_id,
+            'fixed_ips': [{'ip_address': fixed_ip}]}}
+
+    req.environ['kwargs'] = {'success': 201, 'json_data': data}
+    response = req.get_response(cls.app)
+    r = cls.get_from_response(response, "port", {})
+    return r
+
+
+@check_activation
+def snf_allocate_floating_ip(cls, req, network_id, device_id, pool=None):
+    """Synnefo floating ip allocation method"""
+    floating_ips = snf_list_floating_ips(cls, req)
+    floating_ip_address = None
+    floating_network_id = None
+
+    for floating_ip in floating_ips:
+        if floating_ip['port_id'] is None:
+            floating_ip_address = floating_ip['floating_ip_address']
+            floating_network_id = floating_ip['floating_network_id']
+
+    if not all((floating_ip_address, floating_network_id,)):
+        print 'Could not find any available floating ip, creating one...'
+        floating_ip = _snf_create_floating_ip(cls, req)
+        floating_network_id = floating_ip['floating_network_id']
+        floating_ip_address = floating_ip['floating_ip_address']
+
+    _snf_create_port_public_net(cls, req, floating_network_id, device_id,
+                                floating_ip_address)
+    try:
+        link_public = OpenStackHelper._build_link(floating_network_id,
+                                                  device_id,
+                                                  floating_ip_address,
+                                                  floating_network_id)
+    except Exception:
+        raise exception.OCCIInvalidSchema()
+
+    return link_public
+
+
+def _snf_create_port_private_net(cls, req, network_id, device_id):
+    """Synnefo create port method between a server and a private network"""
+    req.environ['service_type'] = 'network'
+    req.environ['method_name'] = 'ports_post'
+    data = {'port': {'network_id': network_id, 'device_id': device_id}}
+
+    req.environ['kwargs'] = {'success': 201, 'json_data': data}
+    response = req.get_response(cls.app)
+    port = cls.get_from_response(response, "port", {})
+    for ip in port["fixed_ips"]:
+        return OpenStackHelper._build_link(port["network_id"],
+                                           device_id,
+                                           ip['ip_address'],
+                                           ip_id=port["id"],
+                                           mac=port['mac_address'],
+                                           state=port["status"])
+
+
+@check_activation
+def snf_create_network_link(cls, req, network_id, device_id):
+    """Synnefo create network link"""
+    net_info = snf_show_network(cls, req, network_id)
+    if net_info['public']:
+        return snf_allocate_floating_ip(cls, req, network_id, device_id,
+                                        pool=None)
+    else:
+        return _snf_create_port_private_net(cls, req, network_id, device_id)
+
+
+def _snf_delete_port(cls, req, device_id, ip_id):
+    """Synnefo delete port method"""
+    req.environ['service_type'] = 'network'
+    req.environ['method_name'] = 'ports_delete'
+    req.environ['kwargs'] = {'port_id': ip_id,
+                             'server_id': device_id,
+                             'success': 204}
+    req.get_response(cls.app)
+
+
+@check_activation
+def snf_delete_network_link(cls, req, device_id, port_id):
+    """
+    Synnefo network_link delete method
+    :param <device_id>: The server id
+    :param <port_id>: The port id
+    TODO:wait until port deletion is done
+    """
+    for port in snf_get_ports(cls, req, device_id):
+        if port['port_id'] == port_id and port['net_id']:
+            _snf_delete_port(cls, req, device_id, port_id)
+            break
+
+
 function_map = {
     '_get_ports': snf_get_ports,
     'get_floating_ips': snf_list_floating_ips,
+    'delete_port': snf_delete_network_link,
+    'create_port': snf_create_network_link,
+    'assign_floating_ip': snf_allocate_floating_ip
 }
