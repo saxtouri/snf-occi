@@ -67,7 +67,8 @@ def snf_show_network(cls, req, id):
     _openstackify_network_response([r], extended)
     build_networks = getattr(OpenStackHelper, '_build_networks', None)
     result = build_networks([r])[0]
-    result['public'] = r['public']
+    if 'public' in r:
+        result['public'] = r['public']
     return result
 
 
