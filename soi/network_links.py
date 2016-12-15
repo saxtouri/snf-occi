@@ -14,7 +14,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from soi.utils import check_activation
-from soi.network import snf_show_network
+from soi import network
 from ooi.api.helpers import OpenStackHelper
 from ooi import exception
 
@@ -146,7 +146,7 @@ def _snf_create_port_private_net(cls, req, network_id, device_id):
 @check_activation
 def snf_create_network_link(cls, req, network_id, device_id):
     """Synnefo create network link"""
-    net_info = snf_show_network(cls, req, network_id)
+    net_info = network.snf_show_network(cls, req, network_id)
     if net_info['public']:
         return snf_allocate_floating_ip(cls, req, network_id, device_id,
                                         pool=None)
