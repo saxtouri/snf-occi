@@ -1,4 +1,4 @@
-# Copyright (C) 2016 GRNET S.A.
+# Copyright (C) 2016-2017 GRNET S.A.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -237,7 +237,5 @@ function_map = {
     'create_server': snf_create_server,
     'run_action': snf_run_action,
     'keypair_create': keypair_register,
-    # TODO: Implement these when you do networks
-    'get_floating_ips': empty_list_200,  # Helps in server delete
     'get_floating_ip_pools': empty_list_200,
 }

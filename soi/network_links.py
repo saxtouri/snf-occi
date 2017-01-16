@@ -1,4 +1,4 @@
-# Copyright (C) 2016 GRNET S.A.
+# Copyright (C) 2016-2017 GRNET S.A.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -90,8 +90,7 @@ def _snf_create_port_public_net(cls, req, network_id, device_id, fixed_ip):
 
     req.environ['kwargs'] = {'success': 201, 'json_data': data}
     response = req.get_response(cls.app)
-    r = cls.get_from_response(response, "port", {})
-    return r
+    return cls.get_from_response(response, "port", {})
 
 
 @check_activation
@@ -135,12 +134,9 @@ def _snf_create_port_private_net(cls, req, network_id, device_id):
     response = req.get_response(cls.app)
     port = cls.get_from_response(response, "port", {})
     for ip in port["fixed_ips"]:
-        return OpenStackHelper._build_link(port["network_id"],
-                                           device_id,
-                                           ip['ip_address'],
-                                           ip_id=port["id"],
-                                           mac=port['mac_address'],
-                                           state=port["status"])
+        return OpenStackHelper._build_link(
+            port["network_id"], device_id, ip['ip_address'],
+            ip_id=port["id"], mac=port['mac_address'], state=port["status"])
 
 
 @check_activation
@@ -172,10 +168,30 @@ def snf_delete_network_link(cls, req, device_id, port_id):
     :param <port_id>: The port id
     TODO:wait until port deletion is done
     """
-    for port in snf_get_ports(cls, req, device_id):
+    for port in cls.snf_get_ports(req, device_id):
         if port['port_id'] == port_id and port['net_id']:
-            _snf_delete_port(cls, req, device_id, port_id)
-            break
+            return _snf_delete_port(cls, req, device_id, port_id)
+
+
+@check_activation
+def snf_delete_ip_port(cls, req, server_id, ip):
+    """Detach a floating ip from a server"""
+    for port in snf_get_ports(cls, req, server_id):
+        if ip and ip == port.get('floating_ip_address'):
+            return cls._snf_delete_port(req, server_id, port['port_id'])
+
+
+@check_activation
+def snf_delete_floating_ip(cls, req, ip):
+    """Return an IP to the pool"""
+    ips = snf_list_floating_ips(cls, req)
+    for floating_ip in ips:
+        if ip == floating_ip['ip']:
+            req.environ['service_type'] = 'network'
+            req.environ['method_name'] = 'floatingips_delete'
+            req.environ['kwargs'] = {
+                'floatingip_id': floating_ip['id'], 'success': 204}
+            return req.get_response(cls.app)
 
 
 function_map = {
@@ -183,5 +199,7 @@ function_map = {
     'get_floating_ips': snf_list_floating_ips,
     'delete_port': snf_delete_network_link,
     'create_port': snf_create_network_link,
-    'assign_floating_ip': snf_allocate_floating_ip
+    'assign_floating_ip': snf_allocate_floating_ip,
+    'remove_floating_ip': snf_delete_ip_port,
+    'release_floating_ip': snf_delete_floating_ip,
 }
