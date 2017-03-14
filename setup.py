@@ -26,5 +26,5 @@ setup(
         [paste.app_factory]
         snf_occi_app=soi:main
         ''',
-    install_requires=['kamaki', 'ooi', ]
+    install_requires=['kamaki', 'ooi', 'pytz', 'paste', 'pastedeploy', ]
 )

@@ -6,18 +6,23 @@
 About snf-occi
 ==============
 
-**snf-occi** snf-occi is an OCCI API proxy for the Synnefo IaaS cloud. The
-purpose of snf-occi is to provide and OCCI REST API for Synnefo's Cyclades API,
+**snf-occi** is an OCCI_  API proxy for the Synnefo_ IaaS cloud. The purpose
+of snf-occi is to provide an OCCI REST API for the Cyclades API of Synnefo,
 which provides compute, networking and volume services.
 
-The implementation of snf-occi is based on Openstack OCCI Interface (OOI)
+The implementation of snf-occi is based on the OOI_ (Openstack OCCI Interface)
 project, since version 0.3. OOI is a WSGI proxy for OpenStack. Synnefo API is
-(almost) compatible with OpenStack, so snf-occi patches OOI wherever needer to
+(almost) compatible with OpenStack, so snf-occi patches OOI wherever needed to
 ensure the desired API compatibility. Clients running on OOI should be able to
 run on snf-occi as well.
 
-**snf-occi** is depends on kamaki library for communicating with Synnefo, and 
+**snf-occi** depends on the kamaki_ library for communicating with Synnefo and
 OOI for receiving and understanding OCCI calls.
+
+.. _OCCI: http://occi-wg.org/
+.. _Synnefo: https://synnefo.org
+.. _OOI: https://github.com/openstack/ooi
+.. _kamaki: https://github.com/grnet/kamaki/
 
 .. toctree::
    :maxdepth: 2
@@ -25,7 +30,10 @@ OOI for receiving and understanding OCCI calls.
 About Open Cloud Computing Interface (OCCI)
 -------------------------------------------
 OCCI unifies various cloud compute services in a common API and a product of
-the EGI initiative. For more information on OCCI: www.ogf.org
+the EGI initiative. For more information on OCCI visit `Open Grid Forum`_
+website.
+
+.. _`Open Grid Forum`: http://www.ogf.org
 
 OCCI and Cyclades
 -----------------
@@ -48,7 +56,8 @@ as follows:
 +-------------------------+-------------------------+
 
 
-.. Note: Metadata info in Synnefo's servers cannot be represented (clearly) using OCCI's components.
+.. note:: Metadata info in Synnefo's servers cannot be represented clearly
+          using OCCI's components.
 
 
 Current progress
@@ -58,58 +67,153 @@ planning to extend it for **networking** and **volumes** as soon as possible.
 We will also provide the corresponding implementations for OCCI 1.2, as soon as
 they are implemented in OOI.
 
+There are two ways to run snf-occi. You can run it natively or with docker.
+Running with docker should be used for testing purposes.
+
+Running Natively
+================
+
 Installation
--------------
+------------
 
-The following instructions have been tested on Debian Jessy with pythoh-pip
-installed. It is suggested to install Paste and PasteScript for deployment.
+The following instructions have been tested on Debian Jessie.
+
+Make sure you have installed python development libraries, e.g. using apt:
 
 ::
 
+  # apt install python-dev
+
+
+If you try to install on Debian Jessie system-wide you might run into some
+problems, since Debian Jessie has an older version of python-six, which is
+a dependency of pip. So, it is probably easier to use virtualenv for your
+installation:
+
+::
+
+  # apt install virtualenv
+  $ virtualenv /path/to/new/environment
+  $ source /path/to/new/environment/bin/activate
   $ git clone https://github.com/grnet/snf-occi
-  $ cd snf-occi
-  $ cp soi/config.py.template snfOCCI/config.py
-  $ vim soi/confg.py
-  ...
-  $ python setup.py install
 
-**NOTE**: edit the **config.py** before running the service. In the following
-example, we replicate the settings of the hellasgrid service, but you can set
-your own cloud and astavoms settings in your own deployment
+Edit the ``soi/config.py`` file before running the service. You can find a
+template in ``soi/config.py.template``. In the following example, we replicate
+the settings of the hellasgrid service, but you can set your own cloud and
+astavoms settings in your own deployment:
 
 ::
 
-  #  Copy this file as config.py and fill in the appropriate values
-  
   AUTH_URL = 'https://accounts.okeanos.grnet.gr/identity/v2.0'
   CA_CERTS = '/etc/ssl/certs/ca-certificates.crt'
   KEYSTONE_URL = 'https://okeanos-astavoms.hellasgrid.gr'
 
   HOST = '127.0.0.1'
   PORT = '8080'
-  PASTE_INI = '/path/to/snf-occi/ci/soi.ini''
+  PASTE_INI = '/path/to/snf-occi/ci/soi.ini'
 
-snf-occi is a simple WSGI python application with basic paste support. A full
-scale deployment is out of the scope of this document, but deployments with
-apache and gunicorn have been tested and work well.
+  # Possible values (1,2)
+  # Volume type=1, drbd
+  # Volume type=2, archipelago
+  VOLUME_TYPE = 2
+
+  DISABLED_METHOD = ()
+
+
+Finally, run the installation
+
+::
+
+  $ python setup.py install
+
+.. note:: If you get a ``RuntimeError: maximum recursion depth exceeded``, try
+  upgrading the ``setuptools`` package of your virtual environment:
+
+  ::
+
+    (venv)$ pip install setuptools --upgrade
+
+
+Running
+-------
+
+If this installation is for testing purposes, you can run ``ci/run-server.py``:
+
+::
+
+  (venv)$ python ci/run-server.py
+
+
+For production, snf-occi should run easily with gunicorn:
+
+::
+
+  $ gunicorn --paste /path/to/soi.ini
+
+An example paste configuration is included in ci/soi.ini, but you can add
+gunicorn specific configuration as follows:
+
+::
+
+  [composite:main]
+  use = egg:Paste#urlmap
+  /:snf_occiapp
+
+  [app:snf_occiapp]
+  use = egg:snf-occi#snf_occi_app
+
+  [server:main]
+  use = egg:gunicorn#main
+  host = 127.0.0.1
+  port = 8080
+  workers = 3
+
+.. note:: If you install gunicorn to the same virtual environment, you might get
+  a ``SyntaxError: invalid syntax``. You can remedy this by upgrading
+  pip:
+
+  ::
+
+    (venv)$ pip install pip --upgrade
+
 
 Running with docker
 ===================
 
-To test snf-occi, you can build and use a docker image, as described in the
-"ci/README.md" file, or just follow these steps:
+To test snf-occi you can build and use a docker image by following these steps:
 
 ::
 
-    $ docker build -t snf-occi-ci https://github.com/grnet/snf-occi.git#develop:ci
-    $ docker run -ti --name occi-ci --net host -p 127.0.0.1:8080:8080 \
-        -e SNF_OCCI_BRANCH="master" \
-        -e AUTH_URL='https://accounts.okeanos.grnet.gr/identity/v2.0' \
-        -e KEYSTONE_URL='https://okeanos-astavoms.hellasgrid.gr' -d \
-        snf-occi-ci
+  $ docker build -t snf-occi-ci https://github.com/grnet/snf-occi.git#develop:ci
+  $ docker run -ti --name occi-ci --net host -p 127.0.0.1:8080:8080 \
+      -e SNF_OCCI_BRANCH="master" \
+      -e AUTH_URL='https://accounts.okeanos.grnet.gr/identity/v2.0' \
+      -e KEYSTONE_URL='https://okeanos-astavoms.hellasgrid.gr' -d \
+      snf-occi-ci
 
-.. note: The default branch for CI testing is "develop", but you can test any
-  branch you want by setting the SNF_OCCI_BRANCH environment variable.
+The default branch for CI testing is "develop", but you can test any
+branch you want by setting the SNF_OCCI_BRANCH environment variable.
+
+Also, the docker installation uses ``ci/config.py`` and not ``soi/config.py``.
+
+To use a different host port, try ``-p 127.0.0.1:<PORT>:8080``, e.g.
+``-p 127.0.0.1:9000:8080``
+
+.. note:: You might run into the following output:
+
+  ::
+
+    $ docker build -t snf-occi-ci https://github.com/grnet/snf-occi.git#develop:ci
+    Step 0 : <!DOCTYPE
+    INFO[0001] Unknown instruction: <!DOCTYPE
+
+  This means that your docker does not support a git repository as a command line
+  argument. The following command is equivalent, after cloning the repository:
+
+  ::
+
+    $ cd snf-occi
+    $ docker build -t snf-occi-ci ci/
 
 
 Testing
