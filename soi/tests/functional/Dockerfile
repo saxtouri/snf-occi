@@ -24,5 +24,6 @@ RUN sudo apt update && sudo apt install ca-policy-egi-core curl openssh-client -
 
 COPY curl /data/curl
 COPY rocci /data/rocci
+COPY curljson /data/curljson
 COPY run.sh /data/
 CMD ["/usr/bin/sudo", "/bin/bash", "/data/run.sh"]

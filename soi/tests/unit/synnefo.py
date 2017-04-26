@@ -17,20 +17,24 @@ from mock import patch
 from json import dumps
 
 
-def test__stringify_json_values():
-    """Make strings of all single values in a json"""
+def test__coerce_json_values():
+    """Change value types of specific json keys.
+    At present implementation, convert all ids from int
+    to string, in order to satisfy openstack compatibility.
+    """
     examples = (
+        # Tests without keys in need of conversion:
         (  # Simple case, trouble free
             {'a': 'a', 'b': ['a', 'b'], 'c': {'a': 'a', 'b': 'b'}},
             {'a': 'a', 'b': ['a', 'b'], 'c': {'a': 'a', 'b': 'b'}},
         ),
         (  # Numbers as values and 1 level nesting
             {'a': 1, 'b': [1, 'b'], 'c': {'a': 'a', 'b': 2}},
-            {'a': '1', 'b': ['1', 'b'], 'c': {'a': 'a', 'b': '2'}},
+            {'a': 1, 'b': [1, 'b'], 'c': {'a': 'a', 'b': 2}},
         ),
         (  # Numbers as keys must stay unchanged
             {1: 'a', 'b': [1, 'b'], 3: {1: 'a', 'b': 2}},
-            {1: 'a', 'b': ['1', 'b'], 3: {1: 'a', 'b': '2'}},
+            {1: 'a', 'b': [1, 'b'], 3: {1: 'a', 'b': 2}},
         ),
         (  # 2-level nesting
             {
@@ -38,14 +42,33 @@ def test__stringify_json_values():
                 'b': [{1: 1, 2: '2'}, 'b'],
                 'c': {'a': 'a', 'b': [1, '2', 'c']}},
             {
-                'a': '1',
-                'b': [{1: '1', 2: '2'}, 'b'],
-                'c': {'a': 'a', 'b': ['1', '2', 'c']}},
+                'a': 1,
+                'b': [{1: 1, 2: '2'}, 'b'],
+                'c': {'a': 'a', 'b': [1, '2', 'c']}},
+        ),
+        # Tests with keys in need of conversion:
+        (  # Simple case, trouble free
+            {'id': 'a', 'volume_id': ['a', 'b'], 'serverId': {'volumeId': 'a', 'b': 'b'}},
+            {'id': 'a', 'volume_id': ['a', 'b'], 'serverId': {'volumeId': 'a', 'b': 'b'}},
+        ),
+        (  # Numbers as values and 1 level nesting
+            {'id':  1 , 'id': [1, 'b'], 'id': {'a': 'a', 'id':  2 }},
+            {'id': '1', 'id': [1, 'b'], 'id': {'a': 'a', 'id': '2'}},
+        ),
+        (  # 2-level nesting
+            {
+                'id': 1,
+                'id': [{1: 1, 2: '2'}, 'b'],
+                'c': {'a': 'a', 'id': [1, '2', 'c', { 'id':  1 }]}},
+            {
+                'id': '1',
+                'id': [{1: 1, 2: '2'}, 'b'],
+                'c': {'a': 'a', 'id': [1, '2', 'c', { 'id': '1'}]}},
         )
     )
 
     for input_, output_ in examples:
-        r = synnefo._stringify_json_values(input_)
+        r = synnefo._coerce_json_values(input_)
         assert r == output_
 
 

@@ -115,7 +115,7 @@ def call_kamaki(environ, start_response, *args, **kwargs):
 
         body = None
         if r.content:
-            body = _stringify_json_values(r.json)
+            body = _coerce_json_values(r.json)
 
     bodystr = ''
     if body is not None:
@@ -127,10 +127,28 @@ def call_kamaki(environ, start_response, *args, **kwargs):
     return bodystr
 
 
-def _stringify_json_values(data):
-    """If a single value is not a string, make it"""
+def _coerce_json_values(data):
+    """Transform json returned from synnefo to make openstack compliant"""
+    TO_STRING = ['id', 'volumeId', 'serverId', 'volume_id', 'server_id'
+                 'device_index']
+    TO_INT = []
+
+    def transform(key, value):
+        ret = (key, value)
+
+        if key in TO_STRING:
+            if isinstance(value, int):
+                ret = (key, '{0}'.format(value))
+        elif key in TO_INT:
+            if isinstance(value, str):
+                ret = (key, int(value))
+
+        return ret
+
     if isinstance(data, dict):
-        return dict((k, _stringify_json_values(v)) for k, v in data.items())
-    if isinstance(data, list):
-        return map(_stringify_json_values, data)
-    return '{0}'.format(data) if data else data
+        return dict(transform(k, _coerce_json_values(v))
+                    for k, v in data.items())
+    elif isinstance(data, list):
+        return map(_coerce_json_values, data)
+
+    return data

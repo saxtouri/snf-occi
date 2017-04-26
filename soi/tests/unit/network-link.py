@@ -52,7 +52,8 @@ def test__openstackify_floating_ips_response():
             'fixed_ip_address': '192.168.0.1',
             'floating_ip_address': '192.168.0.1',
             'fixed_ip': '192.168.0.1',
-            'ip': '192.168.0.1'
+            'ip': '192.168.0.1',
+            'pool': ''
         }
     ]
 

@@ -33,6 +33,7 @@ def _openstackify_floating_ips_response(data):
     for fips in data:
         fips['fixed_ip'] = fips['fixed_ip_address']
         fips['ip'] = fips['floating_ip_address']
+        fips['pool'] = ''
 
 
 @check_activation
@@ -168,7 +169,7 @@ def snf_delete_network_link(cls, req, device_id, port_id):
     :param <port_id>: The port id
     TODO:wait until port deletion is done
     """
-    for port in cls.snf_get_ports(req, device_id):
+    for port in snf_get_ports(cls, req, device_id):
         if port['port_id'] == port_id and port['net_id']:
             return _snf_delete_port(cls, req, device_id, port_id)
 
@@ -177,8 +178,9 @@ def snf_delete_network_link(cls, req, device_id, port_id):
 def snf_delete_ip_port(cls, req, server_id, ip):
     """Detach a floating ip from a server"""
     for port in snf_get_ports(cls, req, server_id):
-        if ip and ip == port.get('floating_ip_address'):
-            return cls._snf_delete_port(req, server_id, port['port_id'])
+        if ip and (ip == port.get('floating_ip_address') or ip in [
+           fxip['ip_address'] for fxip in port.get('fixed_ips') if fxip]):
+            return _snf_delete_port(cls, req, server_id, port['port_id'])
 
 
 @check_activation
