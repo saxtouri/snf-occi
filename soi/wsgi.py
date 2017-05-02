@@ -15,7 +15,7 @@
 
 from ooi.wsgi import OCCIMiddleware
 from ooi.api.helpers import OpenStackHelper
-from soi.config import KEYSTONE_URL
+from soi.config import KEYSTONE_URL, HTTP_HOST, HOST_SCHEME
 from soi.synnefo import AstakosClient, AUTH_URL
 from soi import utils, compute, storage, storage_link, network, network_links
 from kamaki.clients import ClientError
@@ -87,5 +87,8 @@ class SNFOCCIMiddleware(OCCIMiddleware):
                 print 'Fall back to user UUID as project ID'
         environ['HTTP_X_PROJECT_ID'] = snf_project
 
+        environ['HTTP_HOST'] = HTTP_HOST
+        environ['wsgi.url_scheme'] = HOST_SCHEME
         return super(SNFOCCIMiddleware, self).__call__(
             environ, response, *args, **kwargs)
+

@@ -1,4 +1,4 @@
-# Copyright (C) 2016 GRNET S.A.
+# Copyright (C) 2016-2017 GRNET S.A.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,10 @@ ADMIN_TOKEN = 'your_token'
 IGNORE_SSL = False
 CA_CERTS = '/etc/ssl/certs/ca-certificates.crt'
 KEYSTONE_URL = 'https://okeanos-astavoms.example.com'
+
+# Used to form response prefices for your resources
+HTTP_HOST = 'snf-occi.example.com'
+HOST_SCHEME = 'https'
 
 HOST = 'this-host.example.com or IP'
 PORT = '8080'
