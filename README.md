@@ -1,6 +1,8 @@
 snf-occi
 ========
-snf-occi 0.3 implements the OCCI 1.1 protocol for Synnefo clouds. Since version
+snf-occi 0.6 support the OCCI 1.2 protocol. It works with OOI 1.0.0 or better.
+
+snf-occi 0.4 implements the OCCI 1.1 protocol for Synnefo clouds. Since version
 0.2, authentication is performed by an external keystone-compatible service,
 like "Astavoms". The major change is the abandonment of "snfOCCI" in favor of "OOI".
 
