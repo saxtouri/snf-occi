@@ -186,7 +186,7 @@ def test_snf_create_network(gr, gfr, csn, sn):
     network.snf_create_network(cls, req, name=name, cidr=cidr, gateway=None,
                                ip_version=None)
     data = {'network': {'admin_state_up': True, 'type': 'MAC_FILTERED',
-            'name': name, 'project_id': project_id, 'shared': False}}
+            'name': name, 'project': project_id, 'shared': False}}
     assert req.environ == dict(
         HTTP_X_PROJECT_ID=project_id,
         service_type='network',

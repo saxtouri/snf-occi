@@ -110,7 +110,7 @@ def snf_create_network(cls, req, name, cidr,
 
     project_id = req.environ['HTTP_X_PROJECT_ID']
     data = {'network': {'admin_state_up': True, 'type': 'MAC_FILTERED',
-            'name': name, 'project_id': project_id, 'shared': False}}
+            'name': name, 'project': project_id, 'shared': False}}
 
     req.environ['kwargs'] = {'json_data': data, 'success': 201}
     response = req.get_response(cls.app)
