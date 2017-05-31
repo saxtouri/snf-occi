@@ -13,10 +13,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from base64 import b64encode
-import webob.exc
-from soi.utils import empty_list_200
 from os.path import join
+from logging import getLogger
+
+import webob.exc
+
+from soi.utils import empty_list_200
 from soi.utils import check_activation
+from soi.network_links import _snf_create_floating_ip
+from soi.config import CREATE_SERVER_MAX_RETRIES
+
+logger = getLogger(__name__)
+
 
 @check_activation
 def snf_index(cls, req):
@@ -177,11 +185,23 @@ def snf_create_server(cls, req, name, image, flavor, **kwargs):
     if not body.get('block_device_mapping_v2', None):
         body.pop('block_device_mapping_v2', None)
 
-    req.environ['kwargs'] = dict(json_data=dict(server=body))
-    req.environ['service_type'] = 'compute'
-    req.environ['method_name'] = 'servers_post'
+    for retry in range(CREATE_SERVER_MAX_RETRIES + 1):
+        req.environ['kwargs'] = dict(json_data=dict(server=body))
+        req.environ['service_type'] = 'compute'
+        req.environ['method_name'] = 'servers_post'
 
-    response = req.get_response(cls.app)
+        try:
+            response = req.get_response(cls.app)
+            break
+        except webob.exc.HTTPConflict as ex:
+            if (retry < CREATE_SERVER_MAX_RETRIES and
+                    'Please create a floating IP' in '{}'.format(ex)):
+                logger.warn('Could not find any available floating ip, ' +
+                            'creating now (retry: {})'.format(retry+1))
+                _snf_create_floating_ip(cls, req)
+            else:
+                raise
+
     r = cls.get_from_response(response, 'server', {})
     _openstackify_addresses(r['addresses'], r['attachments'])
 

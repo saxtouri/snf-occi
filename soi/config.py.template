@@ -30,6 +30,8 @@ HOST = 'this-host.example.com or IP'
 PORT = '8080'
 PASTE_INI = '/home/user/snf-occi/ci/soi.ini'
 
+CREATE_SERVER_MAX_RETRIES = 5
+
 # Possible values (1,2)
 # Volume type=1, drbd
 # Volume type=2, archipelago
